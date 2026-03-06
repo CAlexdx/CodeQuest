@@ -5,7 +5,7 @@ let correta = "print()"
 if(opcao == correta){
 
 document.getElementById("resultado").innerText =
-"Resposta correta +10 XP"
+"Resposta correta! +10 XP"
 
 }
 else{
