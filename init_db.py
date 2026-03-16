@@ -15,7 +15,7 @@ cursor.execute("""
 INSERT INTO questions (question, answer)
 VALUES
 ("Quanto é 2 + 2?", "4"),
-("Capital do Brasil?", "Brasilia"),
+("Capital do Brasil?", "brasilia"),
 ("Quanto é 10 / 2?", "5")
 """)
 

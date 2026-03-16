@@ -3,29 +3,65 @@
 
 <head>
 <title>CodeQuest</title>
+<link rel="stylesheet" href="/static/style.css">
 </head>
 
 <body>
 
 <h1>CodeQuest</h1>
 
-<h2>{{ q[1] }}</h2>
+<div class="quiz">
 
-<button onclick="responder('{{ q[2] }}')">
-{{ q[2] }}
-</button>
+<h2>{{ question["question"] }}</h2>
 
-<button onclick="responder('{{ q[3] }}')">
-{{ q[3] }}
-</button>
+<input id="resposta" placeholder="Digite sua resposta">
 
-<button onclick="responder('{{ q[4] }}')">
-{{ q[4] }}
-</button>
+<br><br>
+
+<button onclick="enviar()">Responder</button>
+
+</div>
 
 <p id="resultado"></p>
 
-<script src="/static/script.js"></script>
+<script>
+
+const question_id = "{{ question['id'] }}";
+
+function enviar(){
+
+let resposta = document.getElementById("resposta").value
+
+fetch("/answer",{
+method:"POST",
+headers:{
+"Content-Type":"application/json"
+},
+body:JSON.stringify({
+id:question_id,
+answer:resposta
+})
+})
+
+.then(res => res.json())
+.then(data => {
+
+if(data.result == "correct"){
+document.getElementById("resultado").innerText = "✔ Acertou! +10 XP"
+}
+else{
+document.getElementById("resultado").innerText = "❌ Errou!"
+}
+
+setTimeout(()=>{
+location.reload()
+},1500)
+
+})
+
+}
+
+</script>
 
 </body>
 
