@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+<title>Ranking</title>
+<link rel="stylesheet" href="/static/style.css">
+</head>
+
+<body>
+
+<h1>Ranking</h1>
+
+<table>
+
+<tr>
+<th>Usuário</th>
+<th>XP</th>
+</tr>
+
+{% for user in users %}
+
+<tr>
+<td>{{ user["username"] }}</td>
+<td>{{ user["xp"] }}</td>
+</tr>
+
+{% endfor %}
+
+</table>
+
+<br>
+
+<a href="/">Voltar</a>
+
+</body>
+
+</html>

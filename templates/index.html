@@ -10,6 +10,15 @@
 
 <h1>CodeQuest</h1>
 
+<div class="player">
+
+<p>XP: {{ xp }}</p>
+<p>Nível: {{ level }}</p>
+
+<a href="/ranking">Ver Ranking</a>
+
+</div>
+
 <div class="quiz">
 
 <h2>{{ question["question"] }}</h2>
@@ -28,40 +37,9 @@
 
 const question_id = "{{ question['id'] }}";
 
-function enviar(){
-
-let resposta = document.getElementById("resposta").value
-
-fetch("/answer",{
-method:"POST",
-headers:{
-"Content-Type":"application/json"
-},
-body:JSON.stringify({
-id:question_id,
-answer:resposta
-})
-})
-
-.then(res => res.json())
-.then(data => {
-
-if(data.result == "correct"){
-document.getElementById("resultado").innerText = "✔ Acertou! +10 XP"
-}
-else{
-document.getElementById("resultado").innerText = "❌ Errou!"
-}
-
-setTimeout(()=>{
-location.reload()
-},1500)
-
-})
-
-}
-
 </script>
+
+<script src="/static/script.js"></script>
 
 </body>
 
