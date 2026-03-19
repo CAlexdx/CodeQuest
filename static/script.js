@@ -1,26 +1,36 @@
 function enviar(){
 
-let resposta = document.getElementById("resposta").value
+let resposta=document.getElementById("resposta").value
 
 fetch("/answer",{
+
 method:"POST",
+
 headers:{
 "Content-Type":"application/json"
 },
+
 body:JSON.stringify({
 id:question_id,
 answer:resposta
 })
+
 })
 
-.then(res => res.json())
-.then(data => {
+.then(res=>res.json())
 
-if(data.result == "correct"){
-document.getElementById("resultado").innerText = "Acertou! +10 XP"
+.then(data=>{
+
+if(data.result=="correct"){
+
+document.getElementById("resultado").innerText="Acertou +10XP"
+
 }
+
 else{
-document.getElementById("resultado").innerText = "Errou!"
+
+document.getElementById("resultado").innerText="Errou"
+
 }
 
 setTimeout(()=>{

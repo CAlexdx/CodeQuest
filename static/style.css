@@ -9,38 +9,22 @@ text-align:center;
 margin-top:80px;
 }
 
-.player{
-margin-top:20px;
-}
-
 input{
 padding:10px;
+margin:10px;
 width:250px;
 border-radius:6px;
 border:none;
-font-size:16px;
 }
 
 button{
-display:block;
-margin:15px auto;
-padding:15px;
+padding:12px;
 width:200px;
 border:none;
 border-radius:10px;
-font-size:16px;
-cursor:pointer;
 background:#4da6ff;
 color:white;
-}
-
-button:hover{
-opacity:0.8;
-}
-
-#resultado{
-font-size:20px;
-margin-top:20px;
+cursor:pointer;
 }
 
 table{
@@ -49,6 +33,6 @@ border-collapse:collapse;
 }
 
 td,th{
-padding:10px;
 border:1px solid white;
+padding:10px;
 }

@@ -1,45 +1,54 @@
 import sqlite3
+from werkzeug.security import generate_password_hash
 
-conn = sqlite3.connect("database.db")
-cursor = conn.cursor()
+def init_db():
+    conn = sqlite3.connect("database.db")
+    cursor = conn.cursor()
 
-cursor.execute("""
-CREATE TABLE IF NOT EXISTS questions (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    question TEXT NOT NULL,
-    answer TEXT NOT NULL,
-    type TEXT,
-    option1 TEXT,
-    option2 TEXT,
-    option3 TEXT,
-    option4 TEXT
-)
-""")
+    # USERS
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS users(
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        username TEXT UNIQUE,
+        password TEXT,
+        xp INTEGER DEFAULT 0,
+        is_admin INTEGER DEFAULT 0
+    )
+    """)
 
-cursor.execute("""
-CREATE TABLE IF NOT EXISTS users (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    username TEXT,
-    xp INTEGER DEFAULT 0
-)
-""")
+    # QUESTIONS
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS questions(
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        question TEXT,
+        answer TEXT
+    )
+    """)
 
-cursor.execute("DELETE FROM questions")
+    # USER ANSWERS
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS user_answers(
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id INTEGER,
+        question_id INTEGER,
+        user_answer TEXT,
+        correct INTEGER
+    )
+    """)
 
-cursor.execute("""
-INSERT INTO questions (question, answer, type)
-VALUES
-("Quanto é 2 + 2?", "4", "text"),
-("Capital do Brasil?", "brasilia", "text"),
-("Quanto é 10 / 2?", "5", "text")
-""")
+    # CRIAR ADMIN PADRÃO
+    admin_username = "admin"
+    admin_password = generate_password_hash("123456")
 
-cursor.execute("""
-INSERT OR IGNORE INTO users (id, username, xp)
-VALUES (1, "Player", 0)
-""")
+    cursor.execute("SELECT * FROM users WHERE username = ?", (admin_username,))
+    user = cursor.fetchone()
 
-conn.commit()
-conn.close()
+    if not user:
+        cursor.execute("""
+        INSERT INTO users (username, password, is_admin)
+        VALUES (?, ?, 1)
+        """, (admin_username, admin_password))
+        print("Admin criado: admin / 123456")
 
-print("Banco de dados criado com sucesso!")
+    conn.commit()
+    conn.close()

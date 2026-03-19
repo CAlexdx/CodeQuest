@@ -1,0 +1,25 @@
+<h2>Adicionar Pergunta</h2>
+<form method="POST">
+    <input type="text" name="question" placeholder="Pergunta" required>
+    <input type="text" name="answer" placeholder="Resposta" required>
+    <button type="submit">Adicionar</button>
+</form>
+
+<h2>Perguntas</h2>
+<ul>
+{% for q in questions %}
+    <li>
+        {{ q[1] }} - {{ q[2] }}
+        <a href="/admin?delete={{ q[0] }}">[Deletar]</a>
+    </li>
+{% endfor %}
+</ul>
+
+<h2>Usuários</h2>
+<ul>
+{% for u in users %}
+    <li>
+        {{ u[1] }} | XP: {{ u[2] }} | Admin: {{ u[3] }}
+    </li>
+{% endfor %}
+</ul>

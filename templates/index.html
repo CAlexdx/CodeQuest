@@ -10,22 +10,19 @@
 
 <h1>CodeQuest</h1>
 
-<div class="player">
+<p>Usuário: {{username}}</p>
+<p>XP: {{xp}}</p>
+<p>Nível: {{level}}</p>
 
-<p>XP: {{ xp }}</p>
-<p>Nível: {{ level }}</p>
-
-<a href="/ranking">Ver Ranking</a>
-
-</div>
+<a href="/profile">Perfil</a>
+<a href="/ranking">Ranking</a>
+<a href="/logout">Sair</a>
 
 <div class="quiz">
 
 <h2>{{ question["question"] }}</h2>
 
 <input id="resposta" placeholder="Digite sua resposta">
-
-<br><br>
 
 <button onclick="enviar()">Responder</button>
 
@@ -34,9 +31,7 @@
 <p id="resultado"></p>
 
 <script>
-
-const question_id = "{{ question['id'] }}";
-
+const question_id="{{question['id']}}"
 </script>
 
 <script src="/static/script.js"></script>
