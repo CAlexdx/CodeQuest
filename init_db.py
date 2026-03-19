@@ -1,5 +1,4 @@
 import sqlite3
-from werkzeug.security import generate_password_hash
 
 def init_db():
     conn = sqlite3.connect("database.db")
@@ -11,44 +10,44 @@ def init_db():
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         username TEXT UNIQUE,
         password TEXT,
-        xp INTEGER DEFAULT 0,
-        is_admin INTEGER DEFAULT 0
+        xp INTEGER DEFAULT 0
     )
     """)
 
-    # QUESTIONS
+    # QUESTIONS (AGORA COM DIFICULDADE)
     cursor.execute("""
     CREATE TABLE IF NOT EXISTS questions(
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         question TEXT,
-        answer TEXT
+        answer TEXT,
+        difficulty INTEGER
     )
     """)
 
-    # USER ANSWERS
-    cursor.execute("""
-    CREATE TABLE IF NOT EXISTS user_answers(
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        user_id INTEGER,
-        question_id INTEGER,
-        user_answer TEXT,
-        correct INTEGER
-    )
-    """)
+    # INSERIR PERGUNTAS SE NÃO EXISTIR
+    cursor.execute("SELECT COUNT(*) FROM questions")
+    count = cursor.fetchone()[0]
 
-    # CRIAR ADMIN PADRÃO
-    admin_username = "admin"
-    admin_password = generate_password_hash("123456")
+    if count == 0:
+        perguntas = [
+            # FÁCIL (1)
+            ("Quanto é 2 + 2?", "4", 1),
+            ("Capital do Brasil?", "Brasilia", 1),
+            ("Quanto é 10 / 2?", "5", 1),
 
-    cursor.execute("SELECT * FROM users WHERE username = ?", (admin_username,))
-    user = cursor.fetchone()
+            # MÉDIO (2)
+            ("Quanto é 15 * 3?", "45", 2),
+            ("Linguagem usada no navegador?", "JavaScript", 2),
 
-    if not user:
-        cursor.execute("""
-        INSERT INTO users (username, password, is_admin)
-        VALUES (?, ?, 1)
-        """, (admin_username, admin_password))
-        print("Admin criado: admin / 123456")
+            # DIFÍCIL (3)
+            ("Quanto é 12 * 12?", "144", 3),
+            ("Quem criou o Python?", "Guido van Rossum", 3)
+        ]
+
+        cursor.executemany(
+            "INSERT INTO questions (question, answer, difficulty) VALUES (?, ?, ?)",
+            perguntas
+        )
 
     conn.commit()
     conn.close()

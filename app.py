@@ -1,5 +1,5 @@
 import sqlite3
-from flask import Flask, render_template, request, redirect, session
+from flask import Flask, render_template, request, redirect, session, jsonify
 from werkzeug.security import generate_password_hash, check_password_hash
 from init_db import init_db
 
@@ -11,6 +11,17 @@ init_db()
 def get_db():
     return sqlite3.connect("database.db")
 
+def get_level(xp):
+    return xp // 50
+
+def get_difficulty(level):
+    if level < 2:
+        return 1
+    elif level < 4:
+        return 2
+    else:
+        return 3
+
 # HOME
 @app.route("/")
 def home():
@@ -20,15 +31,30 @@ def home():
     conn = get_db()
     cursor = conn.cursor()
 
-    cursor.execute("SELECT username, xp, is_admin FROM users WHERE id = ?", (session["user_id"],))
+    cursor.execute("SELECT username, xp FROM users WHERE id = ?", (session["user_id"],))
     user = cursor.fetchone()
 
-    cursor.execute("SELECT * FROM questions ORDER BY RANDOM() LIMIT 1")
+    level = get_level(user[1])
+    difficulty = get_difficulty(level)
+
+    # PEGA PERGUNTA BASEADA NO NÍVEL
+    cursor.execute(
+        "SELECT * FROM questions WHERE difficulty = ? ORDER BY RANDOM() LIMIT 1",
+        (difficulty,)
+    )
     question = cursor.fetchone()
 
     conn.close()
 
-    return render_template("index.html", user=user, question=question)
+    return render_template("index.html",
+        username=user[0],
+        xp=user[1],
+        level=level,
+        question={
+            "id": question[0],
+            "question": question[1]
+        }
+    )
 
 # REGISTRO
 @app.route("/register", methods=["GET", "POST"])
@@ -77,8 +103,10 @@ def login():
 # RESPONDER
 @app.route("/answer", methods=["POST"])
 def answer():
-    user_answer = request.form["answer"]
-    question_id = request.form["question_id"]
+    data = request.get_json()
+
+    user_answer = data["answer"]
+    question_id = data["id"]
 
     conn = get_db()
     cursor = conn.cursor()
@@ -86,7 +114,7 @@ def answer():
     cursor.execute("SELECT answer FROM questions WHERE id = ?", (question_id,))
     correct_answer = cursor.fetchone()[0]
 
-    correct = int(user_answer.lower() == correct_answer.lower())
+    correct = user_answer.strip().lower() == correct_answer.strip().lower()
 
     if correct:
         cursor.execute("UPDATE users SET xp = xp + 10 WHERE id = ?", (session["user_id"],))
@@ -94,50 +122,29 @@ def answer():
     conn.commit()
     conn.close()
 
-    return redirect("/")
+    return jsonify({"result": "correct" if correct else "wrong"})
 
-# ADMIN
-@app.route("/admin", methods=["GET", "POST"])
-def admin():
+# PROFILE
+@app.route("/profile")
+def profile():
     if "user_id" not in session:
         return redirect("/login")
 
     conn = get_db()
     cursor = conn.cursor()
 
-    cursor.execute("SELECT is_admin FROM users WHERE id = ?", (session["user_id"],))
-    is_admin = cursor.fetchone()[0]
-
-    if not is_admin:
-        conn.close()
-        return "Acesso negado"
-
-    # ADICIONAR PERGUNTA
-    if request.method == "POST":
-        question = request.form.get("question")
-        answer = request.form.get("answer")
-
-        if question and answer:
-            cursor.execute("INSERT INTO questions (question, answer) VALUES (?, ?)", (question, answer))
-            conn.commit()
-
-    # DELETAR
-    delete_id = request.args.get("delete")
-    if delete_id:
-        cursor.execute("DELETE FROM questions WHERE id = ?", (delete_id,))
-        conn.commit()
-
-    # LISTAR
-    cursor.execute("SELECT * FROM questions")
-    questions = cursor.fetchall()
-
-    # USUÁRIOS
-    cursor.execute("SELECT id, username, xp, is_admin FROM users")
-    users = cursor.fetchall()
+    cursor.execute("SELECT username, xp FROM users WHERE id = ?", (session["user_id"],))
+    user = cursor.fetchone()
 
     conn.close()
 
-    return render_template("admin.html", questions=questions, users=users)
+    level = get_level(user[1])
+
+    return render_template("profile.html",
+        username=user[0],
+        xp=user[1],
+        level=level
+    )
 
 # LOGOUT
 @app.route("/logout")
