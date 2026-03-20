@@ -1,10 +1,4 @@
-Perfeito — vou te mandar um **README completo atualizado**, já refletindo tudo que você construiu até agora (login, XP, níveis, múltipla escolha, etc.), pronto pra colar no GitHub.
 
----
-
-# README.md (COMPLETO – SUBSTITUA TUDO)
-
-```md
 # CodeQuest
 
 CodeQuest é uma plataforma web gamificada de aprendizado em programação, inspirada em aplicativos como Duolingo e plataformas educacionais como Alura.
