@@ -11,7 +11,7 @@
 <h1>CodeQuest</h1>
 
 <p>Usuário: {{username}}</p>
-<p>XP: {{xp}}</p>
+<p>XP: {{xp}} / {{xp_next}}</p>
 <p>Nível: {{level}}</p>
 
 <a href="/profile">Perfil</a>
@@ -22,16 +22,31 @@
 
 <h2>{{ question["question"] }}</h2>
 
-<input id="resposta" placeholder="Digite sua resposta">
+<div id="area-resposta">
 
-<button onclick="enviar()">Responder</button>
+{% if question["type"] == "multiple" %}
+
+    {% for opt in question["options"] %}
+        {% if opt %}
+            <button onclick="responder('{{opt}}')">{{opt}}</button><br><br>
+        {% endif %}
+    {% endfor %}
+
+{% else %}
+
+    <input id="resposta" placeholder="Digite sua resposta">
+    <button onclick="enviar()">Responder</button>
+
+{% endif %}
+
+</div>
 
 </div>
 
 <p id="resultado"></p>
 
 <script>
-const question_id="{{question['id']}}"
+const question_id = "{{question['id']}}"
 </script>
 
 <script src="/static/script.js"></script>

@@ -1,168 +1,212 @@
+Perfeito — vou te mandar um **README completo atualizado**, já refletindo tudo que você construiu até agora (login, XP, níveis, múltipla escolha, etc.), pronto pra colar no GitHub.
+
+---
+
+# README.md (COMPLETO – SUBSTITUA TUDO)
+
+```md
 # CodeQuest
 
-CodeQuest é uma plataforma web gamificada de perguntas e respostas para aprendizado, inspirada em aplicativos como Duolingo e plataformas de quiz.
+CodeQuest é uma plataforma web gamificada de aprendizado em programação, inspirada em aplicativos como Duolingo e plataformas educacionais como Alura.
 
-O objetivo do projeto é permitir que usuários respondam perguntas e ganhem XP ao acertar, tornando o aprendizado mais interativo.
+O sistema permite que usuários respondam perguntas relacionadas a desenvolvimento de sistemas e ganhem XP, evoluindo de nível conforme avançam.
 
 ---
 
 # Tecnologias utilizadas
 
-* Python
-* Flask
-* SQLite
-* HTML
-* CSS
-* JavaScript
-* Fetch API
+- Python (Flask)
+- SQLite
+- HTML
+- CSS
+- JavaScript (Fetch API)
+
+---
+
+# Funcionalidades atuais
+
+## Sistema de usuários
+- Cadastro de conta
+- Login com senha criptografada
+- Sessão de usuário
+- Logout
+
+## Sistema de progresso
+- XP por acerto (+10 XP)
+- Sistema de níveis baseado em XP
+- Exibição de XP atual e XP necessário para o próximo nível
+
+## Sistema de perguntas
+- Perguntas baseadas no nível do usuário
+- Sistema de dificuldade (fácil, médio, difícil)
+- Perguntas aleatórias dentro da dificuldade
+
+## Tipos de perguntas
+- Resposta aberta (texto)
+- Múltipla escolha (botões)
+
+## Conteúdos abordados
+- Lógica de programação
+- Python
+- Banco de dados (SQL)
+- Desenvolvimento web (frontend/backend)
+
+## Validação inteligente
+- Respostas não diferenciam maiúsculas/minúsculas
+- Suporte a acentos (ex: Brasília = brasilia)
+
+## Ranking
+- Sistema de ranking entre usuários
+- Base para competição entre jogadores
 
 ---
 
 # Estrutura do projeto
 
 ```
+
 CodeQuest/
 │
 ├── app.py
 ├── init_db.py
 ├── database.db
-├── requirements.txt
+├── README.md
 │
 ├── templates/
-│   └── index.html
+│   ├── index.html
+│   ├── login.html
+│   ├── register.html
+│   ├── profile.html
 │
 └── static/
-    ├── style.css
-    └── script.js
+├── style.css
+└── script.js
+
 ```
 
 ---
 
 # Como rodar o projeto
 
-## 1 Criar ambiente virtual (opcional mas recomendado)
+## 1. Clonar o repositório
+
+```
+
+git clone <seu-repositorio>
+cd CodeQuest
+
+```
+
+---
+
+## 2. Criar ambiente virtual (opcional)
 
 Windows:
-
 ```
+
 python -m venv venv
 venv\Scripts\activate
-```
-
-Linux / Mac:
 
 ```
+
+Linux/Mac:
+```
+
 python3 -m venv venv
 source venv/bin/activate
+
 ```
 
 ---
 
-## 2 Instalar dependências
+## 3. Instalar dependências
 
 ```
+
 pip install flask
-```
 
-ou
-
-```
-pip install -r requirements.txt
 ```
 
 ---
 
-## 3 Criar banco de dados
-
-Execute o arquivo responsável por criar a tabela e inserir perguntas iniciais:
+## 4. Rodar o projeto
 
 ```
-python init_db.py
-```
 
-Isso criará o arquivo:
-
-```
-database.db
-```
-
----
-
-## 4 Rodar o servidor
-
-```
 python app.py
-```
-
-O servidor iniciará em:
 
 ```
-http://127.0.0.1:5000
-```
 
-Abra no navegador para usar o sistema.
+O sistema irá automaticamente:
+- criar o banco de dados
+- inserir perguntas iniciais
 
 ---
 
-# Como funciona o sistema
-
-1. O backend em Flask busca uma pergunta aleatória no banco SQLite.
-2. A pergunta é exibida na interface web.
-3. O usuário digita a resposta.
-4. O JavaScript envia a resposta para o backend usando Fetch API.
-5. O servidor verifica se a resposta está correta.
-6. O sistema retorna:
-
-* correct → resposta correta
-* wrong → resposta incorreta
-
-7. A página mostra o resultado e carrega uma nova pergunta.
-
----
-
-# Banco de dados
-
-Tabela: `questions`
-
-Campos:
+## 5. Acessar no navegador
 
 ```
-id
-question
-answer
+
+[http://127.0.0.1:5000](http://127.0.0.1:5000)
+
 ```
 
-Exemplo de perguntas:
+---
 
-* Quanto é 2 + 2?
-* Capital do Brasil?
-* Quanto é 10 / 2?
+# Como funciona
+
+1. Usuário faz login
+2. Sistema calcula o nível com base no XP
+3. Uma pergunta é selecionada com base na dificuldade
+4. O usuário responde:
+   - digitando (texto)
+   - ou clicando (múltipla escolha)
+5. O sistema valida a resposta
+6. Se correto:
+   - ganha +10 XP
+7. O sistema atualiza o progresso
 
 ---
 
-# Funcionalidades atuais
+# Sistema de níveis
 
-* Perguntas aleatórias
-* Verificação de resposta
-* Interface web simples
-* Comunicação frontend/backend com Fetch API
+O nível do usuário é definido por:
+
+```
+
+nível = XP // 50
+
+```
+
+Exemplo:
+- 0–49 XP → nível 0
+- 50–99 XP → nível 1
+- 100–149 XP → nível 2
 
 ---
 
-# Funcionalidades planejadas
+# Objetivo do projeto
 
-* Sistema de XP
-* Ranking de usuários
-* Login e cadastro
-* Perguntas de programação
-* Questões de múltipla escolha
-* Sistema de níveis
-* Progresso de aprendizado
+Criar uma plataforma de aprendizado interativo focada em programação, com progressão gamificada e experiência envolvente.
+
+---
+
+# Melhorias futuras
+
+- Interface estilo Duolingo
+- Feedback visual (acerto/erro)
+- Explicação das respostas
+- Sistema de conquistas
+- Progresso por tema (Python, SQL, etc.)
+- Perguntas com código formatado
+- Deploy online (Render)
 
 ---
 
 # Autor
 
-Projeto desenvolvido por Calebe Alves.
+Projeto desenvolvido por Calebe Alves, Bruno, Gabriel nilmar, Felipe gustavo, Anderson thiago
 
-Curso técnico de Desenvolvimento de Sistemas.
+Curso técnico de Desenvolvimento de Sistemas
+```
+

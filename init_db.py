@@ -14,40 +14,52 @@ def init_db():
     )
     """)
 
-    # QUESTIONS (AGORA COM DIFICULDADE)
+    # QUESTIONS COM TIPO
     cursor.execute("""
     CREATE TABLE IF NOT EXISTS questions(
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        question TEXT,
-        answer TEXT,
-        difficulty INTEGER
-    )
-    """)
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    question TEXT,
+    answer TEXT,
+    difficulty INTEGER,
+    type TEXT,
+    option1 TEXT,
+    option2 TEXT,
+    option3 TEXT,
+    option4 TEXT
+)
+""")
 
-    # INSERIR PERGUNTAS SE NÃO EXISTIR
     cursor.execute("SELECT COUNT(*) FROM questions")
     count = cursor.fetchone()[0]
 
     if count == 0:
         perguntas = [
-            # FÁCIL (1)
-            ("Quanto é 2 + 2?", "4", 1),
-            ("Capital do Brasil?", "Brasilia", 1),
-            ("Quanto é 10 / 2?", "5", 1),
+                # TEXTO
+                ('print("Hello World") -> saída?', "Hello World", 1, "text", None, None, None, None),
 
-            # MÉDIO (2)
-            ("Quanto é 15 * 3?", "45", 2),
-            ("Linguagem usada no navegador?", "JavaScript", 2),
+                ('numero = 10\nif numero % 2 == 0:\n print("Par")\nelse:\n print("Ímpar")\nSaída?', "Par", 1, "text", None, None, None, None),
 
-            # DIFÍCIL (3)
-            ("Quanto é 12 * 12?", "144", 3),
-            ("Quem criou o Python?", "Guido van Rossum", 3)
-        ]
+                # MÚLTIPLA ESCOLHA
+                ('Qual será a saída?\nprint(2 + 2)', "4", 1, "multiple", "2", "4", "22", "0"),
+
+                ('Qual linguagem roda no navegador?', "JavaScript", 1, "multiple", "Python", "Java", "JavaScript", "C++"),
+
+                ('Qual comando SQL pega tudo?', "*", 2, "multiple", "ALL", "*", "SELECT", "FROM"),
+
+                ('Qual palavra define função em Python?', "def", 2, "multiple", "function", "def", "func", "lambda"),
+
+                # DIFÍCIL
+                ('for i in range(3): print(i)\nSaída?', "0 1 2", 3, "text", None, None, None, None)
+
+]
 
         cursor.executemany(
-            "INSERT INTO questions (question, answer, difficulty) VALUES (?, ?, ?)",
+            """INSERT INTO questions 
+            (question, answer, difficulty, type, option1, option2, option3, option4) 
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)""",
             perguntas
-        )
+            )
+        
 
     conn.commit()
     conn.close()

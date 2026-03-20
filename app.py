@@ -1,4 +1,5 @@
 import sqlite3
+import unicodedata
 from flask import Flask, render_template, request, redirect, session, jsonify
 from werkzeug.security import generate_password_hash, check_password_hash
 from init_db import init_db
@@ -22,6 +23,12 @@ def get_difficulty(level):
     else:
         return 3
 
+def normalize(text):
+    return ''.join(
+        c for c in unicodedata.normalize('NFD', text.lower().strip())
+        if unicodedata.category(c) != 'Mn'
+    )
+
 # HOME
 @app.route("/")
 def home():
@@ -34,10 +41,12 @@ def home():
     cursor.execute("SELECT username, xp FROM users WHERE id = ?", (session["user_id"],))
     user = cursor.fetchone()
 
-    level = get_level(user[1])
+    xp = user[1]
+    level = get_level(xp)
     difficulty = get_difficulty(level)
+    xp_next = (level + 1) * 50
 
-    # PEGA PERGUNTA BASEADA NO NÍVEL
+    # PERGUNTA BASEADA NO NÍVEL
     cursor.execute(
         "SELECT * FROM questions WHERE difficulty = ? ORDER BY RANDOM() LIMIT 1",
         (difficulty,)
@@ -46,59 +55,80 @@ def home():
 
     conn.close()
 
+    # proteção caso não tenha pergunta
+    if not question:
+        return "Sem perguntas cadastradas para esse nível"
+
     return render_template("index.html",
         username=user[0],
-        xp=user[1],
+        xp=xp,
+        xp_next=xp_next,
         level=level,
         question={
             "id": question[0],
-            "question": question[1]
+            "question": question[1],
+            "type": question[4],
+            "options": [question[5], question[6], question[7], question[8]]
         }
     )
 
 # REGISTRO
 @app.route("/register", methods=["GET", "POST"])
 def register():
-    if request.method == "POST":
-        username = request.form["username"]
-        password = generate_password_hash(request.form["password"])
+    error = None
 
-        conn = get_db()
-        cursor = conn.cursor()
-
-        try:
-            cursor.execute("INSERT INTO users (username, password) VALUES (?, ?)", (username, password))
-            conn.commit()
-        except:
-            return "Usuário já existe"
-
-        conn.close()
-        return redirect("/login")
-
-    return render_template("register.html")
-
-# LOGIN
-@app.route("/login", methods=["GET", "POST"])
-def login():
     if request.method == "POST":
         username = request.form["username"]
         password = request.form["password"]
 
-        conn = get_db()
-        cursor = conn.cursor()
+        if not username or not password:
+            error = "Preencha todos os campos"
+        else:
+            conn = get_db()
+            cursor = conn.cursor()
 
-        cursor.execute("SELECT id, password FROM users WHERE username = ?", (username,))
-        user = cursor.fetchone()
+            try:
+                cursor.execute(
+                    "INSERT INTO users (username, password) VALUES (?, ?)",
+                    (username, generate_password_hash(password))
+                )
+                conn.commit()
+                conn.close()
+                return redirect("/login")
+            except:
+                error = "Usuário já existe"
 
-        conn.close()
+    return render_template("register.html", error=error)
 
-        if user and check_password_hash(user[1], password):
-            session["user_id"] = user[0]
-            return redirect("/")
+# LOGIN
+@app.route("/login", methods=["GET", "POST"])
+def login():
+    error = None
 
-        return "Login inválido"
+    if request.method == "POST":
+        username = request.form["username"]
+        password = request.form["password"]
 
-    return render_template("login.html")
+        if not username or not password:
+            error = "Preencha todos os campos"
+        else:
+            conn = get_db()
+            cursor = conn.cursor()
+
+            cursor.execute("SELECT id, password FROM users WHERE username = ?", (username,))
+            user = cursor.fetchone()
+
+            conn.close()
+
+            if not user:
+                error = "Usuário não existe"
+            elif not check_password_hash(user[1], password):
+                error = "Senha incorreta"
+            else:
+                session["user_id"] = user[0]
+                return redirect("/")
+
+    return render_template("login.html", error=error)
 
 # RESPONDER
 @app.route("/answer", methods=["POST"])
@@ -114,7 +144,7 @@ def answer():
     cursor.execute("SELECT answer FROM questions WHERE id = ?", (question_id,))
     correct_answer = cursor.fetchone()[0]
 
-    correct = user_answer.strip().lower() == correct_answer.strip().lower()
+    correct = normalize(user_answer) == normalize(correct_answer)
 
     if correct:
         cursor.execute("UPDATE users SET xp = xp + 10 WHERE id = ?", (session["user_id"],))
@@ -138,11 +168,14 @@ def profile():
 
     conn.close()
 
-    level = get_level(user[1])
+    xp = user[1]
+    level = get_level(xp)
+    xp_next = (level + 1) * 50
 
     return render_template("profile.html",
         username=user[0],
-        xp=user[1],
+        xp=xp,
+        xp_next=xp_next,
         level=level
     )
 

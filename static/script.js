@@ -1,6 +1,13 @@
 function enviar(){
+    let resposta=document.getElementById("resposta").value
+    enviarResposta(resposta)
+}
 
-let resposta=document.getElementById("resposta").value
+function responder(opcao){
+    enviarResposta(opcao)
+}
+
+function enviarResposta(resposta){
 
 fetch("/answer",{
 
@@ -22,21 +29,13 @@ answer:resposta
 .then(data=>{
 
 if(data.result=="correct"){
-
 document.getElementById("resultado").innerText="Acertou +10XP"
-
-}
-
-else{
-
+}else{
 document.getElementById("resultado").innerText="Errou"
-
 }
 
 setTimeout(()=>{
-
 location.reload()
-
 },1500)
 
 })
