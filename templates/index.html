@@ -25,18 +25,34 @@
 <div id="area-resposta">
 
 {% if question["type"] == "multiple" %}
-
     {% for opt in question["options"] %}
         {% if opt %}
             <button onclick="responder('{{opt}}')">{{opt}}</button><br><br>
         {% endif %}
     {% endfor %}
+{% endif %}
 
-{% else %}
-
+{% if question["type"] == "text" %}
     <input id="resposta" placeholder="Digite sua resposta">
     <button onclick="enviar()">Responder</button>
+{% endif %}
 
+{% if question["type"] == "cloze" %}
+    <input id="resposta" placeholder="Complete o código">
+    <button onclick="enviar()">Responder</button>
+{% endif %}
+
+{% if question["type"] == "wordbank" %}
+    <div id="wordbank">
+        {% for opt in question["options"] %}
+            {% if opt %}
+                <button onclick="addWord('{{opt}}')">{{opt}}</button>
+            {% endif %}
+        {% endfor %}
+    </div>
+
+    <p id="montagem"></p>
+    <button onclick="enviarMontagem()">Responder</button>
 {% endif %}
 
 </div>

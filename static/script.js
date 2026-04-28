@@ -1,5 +1,5 @@
 function enviar(){
-    let resposta=document.getElementById("resposta").value
+    let resposta = document.getElementById("resposta").value
     enviarResposta(resposta)
 }
 
@@ -28,16 +28,35 @@ answer:resposta
 
 .then(data=>{
 
+let resultado = document.getElementById("resultado")
+
 if(data.result=="correct"){
-document.getElementById("resultado").innerText="Acertou +10XP"
+    resultado.innerText="Correto! +10 XP"
+    resultado.style.color="lime"
 }else{
-document.getElementById("resultado").innerText="Errou"
+    resultado.innerText="Errado! Resposta: " + data.correct_answer
+    resultado.style.color="red"
 }
 
 setTimeout(()=>{
-location.reload()
+    location.reload()
 },1500)
 
 })
 
+}
+
+// WORD BANK
+
+let frase = []
+
+function addWord(palavra){
+    frase.push(palavra)
+    document.getElementById("montagem").innerText = frase.join(" ")
+}
+
+function enviarMontagem(){
+    let resposta = frase.join(" ")
+    enviarResposta(resposta)
+    frase = []
 }
