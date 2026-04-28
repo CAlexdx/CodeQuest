@@ -255,5 +255,47 @@ def logout():
     session.clear()
     return redirect("/login")
 
+@app.route("/profile")
+def profile():
+    if "user_id" not in session:
+        return redirect("/login")
+
+    conn = get_db()
+    cursor = conn.cursor()
+
+    cursor.execute("SELECT username, xp FROM users WHERE id = ?", (session["user_id"],))
+    user = cursor.fetchone()
+
+    conn.close()
+
+    if not user:
+        return redirect("/logout")
+
+    level = get_level(user[1])
+
+    return render_template("profile.html",
+        username=user[0],
+        xp=user[1],
+        level=level
+    )
+
+@app.route("/ranking")
+def ranking():
+    if "user_id" not in session:
+        return redirect("/login")
+
+    conn = get_db()
+    cursor = conn.cursor()
+
+    # 🔥 PostgreSQL usa %s (não usa ?)
+    cursor.execute("SELECT username, xp FROM users ORDER BY xp DESC LIMIT 10")
+    users = cursor.fetchall()
+
+    conn.close()
+
+    return render_template("ranking.html", users=users)
+
 if __name__=="__main__":
     app.run(debug=True)
+
+    
