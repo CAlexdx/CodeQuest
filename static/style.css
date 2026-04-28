@@ -1,38 +1,148 @@
+/* RESET */
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+}
+
+/* BODY */
 body{
-font-family:Arial;
-background:#121212;
-color:white;
-text-align:center;
+    font-family:Arial, sans-serif;
+    background:#0f172a;
+    color:white;
+    text-align:center;
+    padding:20px;
 }
 
+/* TÍTULO */
+h1{
+    margin-bottom:20px;
+}
+
+/* LINKS */
+a{
+    color:#38bdf8;
+    text-decoration:none;
+    margin:10px;
+    display:inline-block;
+}
+
+a:hover{
+    text-decoration:underline;
+}
+
+/* CARD PRINCIPAL */
 .quiz{
-margin-top:80px;
+    margin-top:40px;
+    background:#1e293b;
+    padding:20px;
+    border-radius:16px;
+    max-width:500px;
+    margin-left:auto;
+    margin-right:auto;
+    box-shadow:0 0 15px rgba(0,0,0,0.5);
 }
 
+/* INPUT */
 input{
-padding:10px;
-margin:10px;
-width:250px;
-border-radius:6px;
-border:none;
+    padding:12px;
+    margin:10px;
+    width:90%;
+    max-width:300px;
+    border-radius:10px;
+    border:none;
+    outline:none;
+    font-size:16px;
 }
 
+/* BOTÕES */
 button{
-padding:12px;
-width:200px;
-border:none;
-border-radius:10px;
-background:#4da6ff;
-color:white;
-cursor:pointer;
+    padding:12px;
+    width:90%;
+    max-width:300px;
+    border:none;
+    border-radius:12px;
+    background:#3b82f6;
+    color:white;
+    cursor:pointer;
+    font-size:16px;
+    transition:0.2s;
 }
 
+button:hover{
+    background:#2563eb;
+}
+
+button:disabled{
+    background:#555;
+    cursor:not-allowed;
+}
+
+/* RESULTADO */
+#resultado{
+    margin-top:20px;
+    font-weight:bold;
+    font-size:18px;
+}
+
+/* WORD BANK */
+#wordbank{
+    margin-top:10px;
+}
+
+#wordbank button{
+    width:auto;
+    margin:5px;
+    padding:8px 12px;
+    background:#22c55e;
+}
+
+#wordbank button:hover{
+    background:#16a34a;
+}
+
+#montagem{
+    margin:10px;
+    font-size:18px;
+}
+
+/* TABELA (ADMIN / RANKING) */
 table{
-margin:auto;
-border-collapse:collapse;
+    margin:auto;
+    border-collapse:collapse;
+    margin-top:20px;
+    width:90%;
+    max-width:600px;
+    background:#1e293b;
+    border-radius:10px;
+    overflow:hidden;
+}
+
+th{
+    background:#3b82f6;
 }
 
 td,th{
-border:1px solid white;
-padding:10px;
+    padding:12px;
+}
+
+/* RESPONSIVO */
+@media(max-width:600px){
+
+    h1{
+        font-size:22px;
+    }
+
+    .quiz{
+        padding:15px;
+    }
+
+    button{
+        width:100%;
+    }
+
+    input{
+        width:100%;
+    }
+
 }

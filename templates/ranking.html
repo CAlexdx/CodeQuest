@@ -1,6 +1,5 @@
 <!DOCTYPE html>
 <html>
-
 <head>
 <title>Ranking</title>
 <link rel="stylesheet" href="/static/style.css">
@@ -11,25 +10,24 @@
 <h1>Ranking</h1>
 
 <table>
-
 <tr>
+<th>#</th>
 <th>Usuário</th>
 <th>XP</th>
 </tr>
 
-{% for u in users %}
-
+{% for user in users %}
 <tr>
-<td>{{u["username"]}}</td>
-<td>{{u["xp"]}}</td>
+<td>{{ loop.index }}</td>
+<td>{{ user.username }}</td>
+<td>{{ user.xp }}</td>
 </tr>
-
 {% endfor %}
 
 </table>
 
+<br>
 <a href="/">Voltar</a>
 
 </body>
-
 </html>

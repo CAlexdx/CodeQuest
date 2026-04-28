@@ -1,5 +1,4 @@
 import sqlite3
-from werkzeug.security import generate_password_hash
 
 def init_db():
     conn = sqlite3.connect("database.db")
@@ -16,7 +15,7 @@ def init_db():
     )
     """)
 
-    # QUESTIONS (AGORA MELHOR)
+    # QUESTIONS
     cursor.execute("""
     CREATE TABLE IF NOT EXISTS questions(
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -32,7 +31,7 @@ def init_db():
     )
     """)
 
-    # HISTÓRICO (IMPORTANTE PRA FUTURO)
+    # HISTÓRICO
     cursor.execute("""
     CREATE TABLE IF NOT EXISTS user_answers(
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -43,36 +42,97 @@ def init_db():
     )
     """)
 
-    # PERFORMANCE (MUITO IMPORTANTE)
-    cursor.execute("CREATE INDEX IF NOT EXISTS idx_users_xp ON users(xp)")
-    cursor.execute("CREATE INDEX IF NOT EXISTS idx_questions_difficulty ON questions(difficulty)")
-
-    # INSERIR PERGUNTAS SE VAZIO
     cursor.execute("SELECT COUNT(*) FROM questions")
     if cursor.fetchone()[0] == 0:
 
         perguntas = [
 
-            # FÁCIL
-            ('print("Hello")', "Hello", 1, "text", None, None, None, None, "print exibe texto na tela"),
+        # ==========================
+        # 🟢 FÁCIL
+        # ==========================
 
-            ('Qual linguagem roda no navegador?', "JavaScript", 1, "multiple",
-             "Python", "Java", "JavaScript", "C++",
-             "JavaScript roda no navegador"),
+        ("Qual será a saída?\nprint('Hello World')",
+         "hello world", 1, "text",
+         None, None, None, None,
+         "print exibe texto na tela"),
 
-            # MÉDIO
-            ('O que SELECT * faz no SQL?', "*", 2, "multiple",
-             "Seleciona tudo", "*", "Busca linha", "Erro",
-             "Seleciona todas as colunas"),
+        ("Complete o código:\nprint('____') → Hello",
+         "hello", 1, "cloze",
+         None, None, None, None,
+         "Você precisa completar com Hello"),
 
-            ('Qual palavra cria função em Python?', "def", 2, "multiple",
-             "function", "def", "lambda", "create",
-             "def define funções"),
+        ("Qual linguagem roda no navegador?",
+         "JavaScript", 1, "multiple",
+         "Python", "Java", "JavaScript", "C++",
+         "JavaScript roda no navegador"),
 
-            # DIFÍCIL
-            ('for i in range(3): print(i)', "0 1 2", 3, "text",
-             None, None, None, None,
-             "range(3) vai de 0 até 2")
+        ("Qual símbolo representa comentário em Python?",
+         "#", 1, "multiple",
+         "//", "#", "<!-- -->", "--",
+         "# é usado para comentários"),
+
+        ("Complete:\nif 10 % 2 == ____:",
+         "0", 1, "cloze",
+         None, None, None, None,
+         "Número par tem resto 0"),
+
+        # ==========================
+        # 🟡 MÉDIO
+        # ==========================
+
+        ("Qual será a saída?\nnumero = 10\nif numero % 2 == 0:\n print('Par')",
+         "par", 2, "text",
+         None, None, None, None,
+         "10 é número par"),
+
+        ("Qual palavra cria função em Python?",
+         "def", 2, "multiple",
+         "function", "def", "lambda", "create",
+         "def define funções"),
+
+        ("O que SELECT * faz no SQL?",
+         "Seleciona tudo", 2, "multiple",
+         "Seleciona tudo", "*", "Busca linha", "Erro",
+         "Seleciona todas as colunas"),
+
+        ("Complete o código:\nfor i in range(__):",
+         "5", 2, "cloze",
+         None, None, None, None,
+         "range define quantas vezes o loop roda"),
+
+        ("Qual é o resultado?\nprint(2 + 3 * 2)",
+         "8", 2, "text",
+         None, None, None, None,
+         "Multiplicação vem antes da soma"),
+
+        # ==========================
+        # 🔴 DIFÍCIL
+        # ==========================
+
+        ("Qual será a saída?\nfor i in range(3): print(i)",
+         "0 1 2", 3, "text",
+         None, None, None, None,
+         "range(3) vai de 0 até 2"),
+
+        ("Qual comando remove tabela no SQL?",
+         "DROP TABLE", 3, "multiple",
+         "DELETE", "DROP TABLE", "REMOVE", "CLEAR",
+         "DROP TABLE remove a tabela inteira"),
+
+        ("Complete:\ndef soma(a,b): return ____",
+         "a+b", 3, "cloze",
+         None, None, None, None,
+         "Retorna a soma"),
+
+        ("Qual é a saída?\nprint(bool(0))",
+         "false", 3, "text",
+         None, None, None, None,
+         "0 é considerado False"),
+
+        ("Qual estrutura repete enquanto condição for verdadeira?",
+         "while", 3, "multiple",
+         "for", "loop", "while", "repeat",
+         "while executa enquanto for verdadeiro"),
 
         ]
 

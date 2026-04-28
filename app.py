@@ -285,12 +285,19 @@ def ranking():
     cursor = conn.cursor()
 
     cursor.execute("SELECT username, xp FROM users ORDER BY xp DESC LIMIT 10")
-    users = cursor.fetchall()
+    rows = cursor.fetchall()
 
     conn.close()
 
-    return render_template("ranking.html", users=users)
+    # 🔥 transforma em dict (resolve bug de index)
+    users = []
+    for r in rows:
+        users.append({
+            "username": r[0],
+            "xp": r[1]
+        })
 
+    return render_template("ranking.html", users=users)
 # ==========================
 # ADMIN
 # ==========================
