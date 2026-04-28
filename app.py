@@ -58,7 +58,7 @@ def init_db():
     )
     """)
 
-    # PREVENIR SPAM DE XP
+    # CONTROLE DE RESPOSTAS (ANTI-SPAM + NÃO REPETIR)
     cursor.execute(f"""
     CREATE TABLE IF NOT EXISTS answered (
         user_id INTEGER,
@@ -68,14 +68,35 @@ def init_db():
 
     cursor.execute("SELECT COUNT(*) FROM questions")
     if cursor.fetchone()[0] == 0:
+
         perguntas = [
-            ("print('Hello World') → saída?", "hello world", 1, "text", None, None, None, None),
-            ("Qual comando cria uma tabela no SQL?", "create table", 1, "multiple",
-             "CREATE TABLE", "INSERT", "SELECT", "DROP"),
+
+            # ===== FÁCIL =====
+            ("print('Hello') → saída?", "hello", 1, "text", None, None, None, None),
+
+            ("Qual linguagem roda no navegador?", "javascript", 1, "multiple",
+             "Python", "Java", "JavaScript", "C++"),
+
+            ("Complete: print('____') → World", "world", 1, "cloze",
+             None, None, None, None),
+
+            # ===== MÉDIO =====
+            ("numero = 10\nif numero % 2 == 0:\n print('Par')\nQual saída?", "par", 2, "multiple",
+             "Ímpar", "Par", "Erro", "Nada"),
+
+            ("Qual comando SQL seleciona dados?", "select", 2, "multiple",
+             "INSERT", "SELECT", "DELETE", "DROP"),
+
+            # ===== DIFÍCIL =====
+            ("for i in range(3): print(i)", "0 1 2", 3, "text",
+             None, None, None, None),
+
         ]
 
         cursor.executemany(
-            f"INSERT INTO questions (question, answer, difficulty, type, opt1, opt2, opt3, opt4) VALUES ({p},{p},{p},{p},{p},{p},{p},{p})",
+            f"""INSERT INTO questions 
+            (question, answer, difficulty, type, opt1, opt2, opt3, opt4)
+            VALUES ({p},{p},{p},{p},{p},{p},{p},{p})""",
             perguntas
         )
 
@@ -91,6 +112,14 @@ init_db()
 def get_level(xp):
     return xp // 50
 
+def get_difficulty(level):
+    if level < 2:
+        return 1
+    elif level < 4:
+        return 2
+    else:
+        return 3
+
 def normalize(text):
     return ''.join(
         c for c in unicodedata.normalize('NFD', text.lower().strip())
@@ -98,7 +127,7 @@ def normalize(text):
     )
 
 # ==========================
-# ROTAS
+# HOME (CORRIGIDO)
 # ==========================
 
 @app.route("/")
@@ -113,16 +142,45 @@ def home():
     cursor.execute(f"SELECT username, xp FROM users WHERE id={p}", (session["user_id"],))
     user = cursor.fetchone()
 
-    cursor.execute("SELECT * FROM questions ORDER BY RANDOM() LIMIT 1")
+    if not user:
+        return redirect("/logout")
+
+    level = get_level(user[1])
+    difficulty = get_difficulty(level)
+
+    # 🔥 NÃO REPETE PERGUNTA JÁ RESPONDIDA
+    cursor.execute(f"""
+    SELECT * FROM questions 
+    WHERE difficulty={p} 
+    AND id NOT IN (
+        SELECT question_id FROM answered WHERE user_id={p}
+    )
+    ORDER BY RANDOM()
+    LIMIT 1
+    """, (difficulty, session["user_id"]))
+
     q = cursor.fetchone()
+
+    # se acabou perguntas, libera todas novamente
+    if not q:
+        cursor.execute(f"DELETE FROM answered WHERE user_id={p}", (session["user_id"],))
+        conn.commit()
+
+        cursor.execute(f"""
+        SELECT * FROM questions 
+        WHERE difficulty={p}
+        ORDER BY RANDOM()
+        LIMIT 1
+        """, (difficulty,))
+        q = cursor.fetchone()
 
     conn.close()
 
     return render_template("index.html",
         username=user[0],
         xp=user[1],
-        xp_next=(get_level(user[1])+1)*50,
-        level=get_level(user[1]),
+        xp_next=(level+1)*50,
+        level=level,
         question={
             "id": q[0],
             "question": q[1],
@@ -217,7 +275,7 @@ def answer():
     cursor=conn.cursor()
     p=get_placeholder()
 
-    # Verificar se já respondeu
+    # BLOQUEIA SPAM
     cursor.execute(
         f"SELECT * FROM answered WHERE user_id={p} AND question_id={p}",
         (session["user_id"], data["id"])
@@ -235,7 +293,6 @@ def answer():
     else:
         result="wrong"
 
-    # Registrar resposta
     cursor.execute(
         f"INSERT INTO answered (user_id, question_id) VALUES ({p},{p})",
         (session["user_id"], data["id"])
@@ -247,7 +304,7 @@ def answer():
     return jsonify({"result":result,"correct_answer":correct})
 
 # ==========================
-# PROFILE (CORRIGIDO)
+# PROFILE
 # ==========================
 
 @app.route("/profile")
@@ -263,9 +320,6 @@ def profile():
     user = cursor.fetchone()
     conn.close()
 
-    if not user:
-        return redirect("/logout")
-
     return render_template("profile.html",
         username=user[0],
         xp=user[1],
@@ -273,7 +327,7 @@ def profile():
     )
 
 # ==========================
-# RANKING (CORRIGIDO)
+# RANKING
 # ==========================
 
 @app.route("/ranking")
@@ -286,52 +340,11 @@ def ranking():
 
     cursor.execute("SELECT username, xp FROM users ORDER BY xp DESC LIMIT 10")
     rows = cursor.fetchall()
-
     conn.close()
 
-    # 🔥 transforma em dict (resolve bug de index)
-    users = []
-    for r in rows:
-        users.append({
-            "username": r[0],
-            "xp": r[1]
-        })
+    users = [{"username": r[0], "xp": r[1]} for r in rows]
 
     return render_template("ranking.html", users=users)
-# ==========================
-# ADMIN
-# ==========================
-
-@app.route("/admin")
-def admin():
-    if "user_id" not in session:
-        return redirect("/login")
-
-    conn=get_db()
-    cursor=conn.cursor()
-    p=get_placeholder()
-
-    cursor.execute(f"SELECT is_admin FROM users WHERE id={p}", (session["user_id"],))
-    if not cursor.fetchone()[0]:
-        return "Acesso negado"
-
-    cursor.execute("SELECT id,username,xp FROM users ORDER BY xp DESC")
-    users=cursor.fetchall()
-
-    conn.close()
-    return render_template("admin.html", users=users)
-
-@app.route("/delete_user/<int:id>")
-def delete_user(id):
-    conn=get_db()
-    cursor=conn.cursor()
-    p=get_placeholder()
-
-    cursor.execute(f"DELETE FROM users WHERE id={p}", (id,))
-    conn.commit()
-    conn.close()
-
-    return redirect("/admin")
 
 # ==========================
 # LOGOUT
