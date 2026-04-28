@@ -10,8 +10,7 @@ def init_db():
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         username TEXT UNIQUE,
         password TEXT,
-        xp INTEGER DEFAULT 0,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        xp INTEGER DEFAULT 0
     )
     """)
 
@@ -19,26 +18,22 @@ def init_db():
     cursor.execute("""
     CREATE TABLE IF NOT EXISTS questions(
         id INTEGER PRIMARY KEY AUTOINCREMENT,
-        question TEXT NOT NULL,
-        answer TEXT NOT NULL,
-        difficulty INTEGER NOT NULL,
-        type TEXT NOT NULL,
-        option1 TEXT,
-        option2 TEXT,
-        option3 TEXT,
-        option4 TEXT,
-        explanation TEXT
+        question TEXT,
+        answer TEXT,
+        difficulty INTEGER,
+        type TEXT,
+        opt1 TEXT,
+        opt2 TEXT,
+        opt3 TEXT,
+        opt4 TEXT
     )
     """)
 
-    # HISTÓRICO
+    # CONTROLE DE RESPOSTAS
     cursor.execute("""
-    CREATE TABLE IF NOT EXISTS user_answers(
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
+    CREATE TABLE IF NOT EXISTS answered(
         user_id INTEGER,
-        question_id INTEGER,
-        is_correct INTEGER,
-        answered_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        question_id INTEGER
     )
     """)
 
@@ -47,99 +42,94 @@ def init_db():
 
         perguntas = [
 
-        # ==========================
-        # 🟢 FÁCIL
-        # ==========================
+# ==========================
+# 🟢 FÁCIL (1)
+# ==========================
 
-        ("Qual será a saída?\nprint('Hello World')",
-         "hello world", 1, "text",
-         None, None, None, None,
-         "print exibe texto na tela"),
+("print('Hello') → saída?", "hello", 1, "text", None, None, None, None),
+("Qual linguagem roda no navegador?", "javascript", 1, "multiple",
+ "Python", "Java", "JavaScript", "C++"),
+("Complete: print('____') → World", "world", 1, "cloze", None, None, None, None),
+("Qual símbolo inicia comentário em Python?", "#", 1, "multiple",
+ "//", "#", "/*", "<!--"),
+("Qual comando exibe algo na tela em Python?", "print", 1, "text", None, None, None, None),
+("HTML é usado para?", "estrutura", 1, "multiple",
+ "Estilo", "Banco", "Estrutura", "Servidor"),
+("CSS serve para?", "estilo", 1, "multiple",
+ "Banco", "Estilo", "Lógica", "Servidor"),
+("JS significa?", "javascript", 1, "text", None, None, None, None),
+("Qual comando cria variável?", "=", 1, "text", None, None, None, None),
+("Qual tipo armazena texto?", "string", 1, "multiple",
+ "int", "float", "string", "bool"),
 
-        ("Complete o código:\nprint('____') → Hello",
-         "hello", 1, "cloze",
-         None, None, None, None,
-         "Você precisa completar com Hello"),
+# ==========================
+# 🟡 MÉDIO (2)
+# ==========================
 
-        ("Qual linguagem roda no navegador?",
-         "JavaScript", 1, "multiple",
-         "Python", "Java", "JavaScript", "C++",
-         "JavaScript roda no navegador"),
+("numero = 10\nif numero % 2 == 0:\n print('Par')\nSaída?", "par", 2, "multiple",
+ "Par", "Ímpar", "Erro", "Nada"),
+("Qual comando SQL seleciona dados?", "select", 2, "multiple",
+ "INSERT", "SELECT", "DELETE", "DROP"),
+("Complete: def ____():", "funcao", 2, "cloze", None, None, None, None),
+("Qual palavra cria função?", "def", 2, "multiple",
+ "function", "def", "create", "lambda"),
+("Qual estrutura repete código?", "for", 2, "multiple",
+ "if", "for", "def", "class"),
+("Qual banco usamos?", "sqlite", 2, "text", None, None, None, None),
+("SELECT * significa?", "*", 2, "text", None, None, None, None),
+("Qual comando adiciona dados?", "insert", 2, "multiple",
+ "SELECT", "INSERT", "DELETE", "DROP"),
+("Qual retorna verdadeiro/falso?", "bool", 2, "multiple",
+ "int", "string", "bool", "float"),
+("Qual operador compara?", "==", 2, "text", None, None, None, None),
 
-        ("Qual símbolo representa comentário em Python?",
-         "#", 1, "multiple",
-         "//", "#", "<!-- -->", "--",
-         "# é usado para comentários"),
+("Complete código: if x > 10: print('____')", "maior", 2, "cloze", None, None, None, None),
+("Qual método pega input?", "input", 2, "text", None, None, None, None),
+("Qual converte para inteiro?", "int", 2, "text", None, None, None, None),
+("Qual estrutura decisão?", "if", 2, "multiple",
+ "for", "if", "while", "def"),
+("Qual laço infinito?", "while", 2, "multiple",
+ "for", "while", "if", "def"),
 
-        ("Complete:\nif 10 % 2 == ____:",
-         "0", 1, "cloze",
-         None, None, None, None,
-         "Número par tem resto 0"),
+# ==========================
+# 🔴 DIFÍCIL (3)
+# ==========================
 
-        # ==========================
-        # 🟡 MÉDIO
-        # ==========================
+("for i in range(3): print(i)", "0 1 2", 3, "text", None, None, None, None),
+("range(5) vai até?", "4", 3, "multiple",
+ "5", "4", "3", "6"),
+("Qual chave primária no SQL?", "id", 3, "text", None, None, None, None),
+("Qual comando apaga tabela?", "drop", 3, "multiple",
+ "DELETE", "DROP", "REMOVE", "CLEAR"),
+("Qual atualiza dados?", "update", 3, "multiple",
+ "INSERT", "UPDATE", "SELECT", "DROP"),
 
-        ("Qual será a saída?\nnumero = 10\nif numero % 2 == 0:\n print('Par')",
-         "par", 2, "text",
-         None, None, None, None,
-         "10 é número par"),
+("Complete: SELECT ____ FROM users", "*", 3, "cloze", None, None, None, None),
+("Qual framework Python web?", "flask", 3, "text", None, None, None, None),
+("Qual comando conecta DB?", "connect", 3, "text", None, None, None, None),
+("Qual método HTTP envia dados?", "post", 3, "multiple",
+ "GET", "POST", "PUT", "DELETE"),
+("Qual rota principal Flask?", "/", 3, "text", None, None, None, None),
 
-        ("Qual palavra cria função em Python?",
-         "def", 2, "multiple",
-         "function", "def", "lambda", "create",
-         "def define funções"),
+("Complete: app.route('____')", "/", 3, "cloze", None, None, None, None),
+("Qual biblioteca senha?", "werkzeug", 3, "text", None, None, None, None),
+("Qual banco online usamos?", "postgresql", 3, "text", None, None, None, None),
+("Qual comando cria tabela?", "create table", 3, "text", None, None, None, None),
+("Qual função random SQL?", "random", 3, "text", None, None, None, None),
 
-        ("O que SELECT * faz no SQL?",
-         "Seleciona tudo", 2, "multiple",
-         "Seleciona tudo", "*", "Busca linha", "Erro",
-         "Seleciona todas as colunas"),
-
-        ("Complete o código:\nfor i in range(__):",
-         "5", 2, "cloze",
-         None, None, None, None,
-         "range define quantas vezes o loop roda"),
-
-        ("Qual é o resultado?\nprint(2 + 3 * 2)",
-         "8", 2, "text",
-         None, None, None, None,
-         "Multiplicação vem antes da soma"),
-
-        # ==========================
-        # 🔴 DIFÍCIL
-        # ==========================
-
-        ("Qual será a saída?\nfor i in range(3): print(i)",
-         "0 1 2", 3, "text",
-         None, None, None, None,
-         "range(3) vai de 0 até 2"),
-
-        ("Qual comando remove tabela no SQL?",
-         "DROP TABLE", 3, "multiple",
-         "DELETE", "DROP TABLE", "REMOVE", "CLEAR",
-         "DROP TABLE remove a tabela inteira"),
-
-        ("Complete:\ndef soma(a,b): return ____",
-         "a+b", 3, "cloze",
-         None, None, None, None,
-         "Retorna a soma"),
-
-        ("Qual é a saída?\nprint(bool(0))",
-         "false", 3, "text",
-         None, None, None, None,
-         "0 é considerado False"),
-
-        ("Qual estrutura repete enquanto condição for verdadeira?",
-         "while", 3, "multiple",
-         "for", "loop", "while", "repeat",
-         "while executa enquanto for verdadeiro"),
+("Qual linguagem backend?", "python", 3, "multiple",
+ "HTML", "CSS", "Python", "XML"),
+("Qual retorna JSON?", "jsonify", 3, "text", None, None, None, None),
+("Qual guarda sessão?", "session", 3, "text", None, None, None, None),
+("Qual verifica senha?", "check_password_hash", 3, "text", None, None, None, None),
+("Qual criptografa senha?", "generate_password_hash", 3, "text", None, None, None, None),
 
         ]
 
         cursor.executemany("""
         INSERT INTO questions 
-        (question, answer, difficulty, type, option1, option2, option3, option4, explanation)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+        (question, answer, difficulty, type, opt1, opt2, opt3, opt4)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
         """, perguntas)
 
     conn.commit()
