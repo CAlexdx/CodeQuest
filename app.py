@@ -24,6 +24,54 @@ def get_placeholder():
     return "%s" if os.environ.get("DATABASE_URL") else "?"
 
 # ==========================
+# INIT DB (AGORA COMPLETO)
+# ==========================
+
+def init_db():
+    conn = get_db()
+    cursor = conn.cursor()
+    p = get_placeholder()
+
+    # USERS
+    cursor.execute(f"""
+    CREATE TABLE IF NOT EXISTS users (
+        id {"SERIAL PRIMARY KEY" if p=="%s" else "INTEGER PRIMARY KEY AUTOINCREMENT"},
+        username TEXT UNIQUE,
+        password TEXT,
+        xp INTEGER DEFAULT 0,
+        is_admin BOOLEAN DEFAULT FALSE
+    )
+    """)
+
+    # QUESTIONS
+    cursor.execute(f"""
+    CREATE TABLE IF NOT EXISTS questions (
+        id {"SERIAL PRIMARY KEY" if p=="%s" else "INTEGER PRIMARY KEY AUTOINCREMENT"},
+        question TEXT,
+        answer TEXT,
+        difficulty INTEGER,
+        type TEXT,
+        opt1 TEXT,
+        opt2 TEXT,
+        opt3 TEXT,
+        opt4 TEXT
+    )
+    """)
+
+    # RESPOSTAS (ANTI-REPETIÇÃO)
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS answered (
+        user_id INTEGER,
+        question_id INTEGER
+    )
+    """)
+
+    conn.commit()
+    conn.close()
+
+init_db()
+
+# ==========================
 # FUNÇÕES
 # ==========================
 
@@ -45,7 +93,7 @@ def normalize(text):
     )
 
 # ==========================
-# HOME (CORRIGIDO)
+# HOME (SISTEMA DUOLINGO)
 # ==========================
 
 @app.route("/")
@@ -57,6 +105,7 @@ def home():
     cursor = conn.cursor()
     p = get_placeholder()
 
+    # usuário
     cursor.execute(f"SELECT username, xp FROM users WHERE id={p}", (session["user_id"],))
     user = cursor.fetchone()
 
@@ -66,10 +115,10 @@ def home():
     level = get_level(user[1])
     difficulty = get_difficulty(level)
 
-    # 🔥 NÃO REPETE PERGUNTA JÁ RESPONDIDA
+    # pergunta NÃO respondida
     cursor.execute(f"""
     SELECT * FROM questions 
-    WHERE difficulty={p} 
+    WHERE difficulty={p}
     AND id NOT IN (
         SELECT question_id FROM answered WHERE user_id={p}
     )
@@ -79,7 +128,7 @@ def home():
 
     q = cursor.fetchone()
 
-    # se acabou perguntas, libera todas novamente
+    # se acabou as perguntas → reinicia ciclo
     if not q:
         cursor.execute(f"DELETE FROM answered WHERE user_id={p}", (session["user_id"],))
         conn.commit()
@@ -179,7 +228,7 @@ def login():
     return render_template("login.html", error=error)
 
 # ==========================
-# ANSWER (ANTI-SPAM)
+# ANSWER (ANTI-SPAM REAL)
 # ==========================
 
 @app.route("/answer", methods=["POST"])
@@ -193,9 +242,9 @@ def answer():
     cursor=conn.cursor()
     p=get_placeholder()
 
-    # BLOQUEIA SPAM
+    # bloqueia múltiplos cliques
     cursor.execute(
-        f"SELECT * FROM answered WHERE user_id={p} AND question_id={p}",
+        f"SELECT 1 FROM answered WHERE user_id={p} AND question_id={p}",
         (session["user_id"], data["id"])
     )
 
