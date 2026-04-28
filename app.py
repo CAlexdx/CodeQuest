@@ -30,57 +30,41 @@ def get_placeholder():
 def init_db():
     conn = get_db()
     cursor = conn.cursor()
-    is_pg = os.environ.get("DATABASE_URL")
+    p = get_placeholder()
 
-    if is_pg:
-        cursor.execute("""
-        CREATE TABLE IF NOT EXISTS users (
-            id SERIAL PRIMARY KEY,
-            username TEXT UNIQUE,
-            password TEXT,
-            xp INTEGER DEFAULT 0,
-            is_admin BOOLEAN DEFAULT FALSE
-        )
-        """)
-    else:
-        cursor.execute("""
-        CREATE TABLE IF NOT EXISTS users (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            username TEXT UNIQUE,
-            password TEXT,
-            xp INTEGER DEFAULT 0,
-            is_admin BOOLEAN DEFAULT 0
-        )
-        """)
+    # USERS
+    cursor.execute(f"""
+    CREATE TABLE IF NOT EXISTS users (
+        id {"SERIAL PRIMARY KEY" if p=="%s" else "INTEGER PRIMARY KEY AUTOINCREMENT"},
+        username TEXT UNIQUE,
+        password TEXT,
+        xp INTEGER DEFAULT 0,
+        is_admin BOOLEAN DEFAULT FALSE
+    )
+    """)
 
-    if is_pg:
-        cursor.execute("""
-        CREATE TABLE IF NOT EXISTS questions (
-            id SERIAL PRIMARY KEY,
-            question TEXT,
-            answer TEXT,
-            difficulty INTEGER,
-            type TEXT,
-            opt1 TEXT,
-            opt2 TEXT,
-            opt3 TEXT,
-            opt4 TEXT
-        )
-        """)
-    else:
-        cursor.execute("""
-        CREATE TABLE IF NOT EXISTS questions (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            question TEXT,
-            answer TEXT,
-            difficulty INTEGER,
-            type TEXT,
-            opt1 TEXT,
-            opt2 TEXT,
-            opt3 TEXT,
-            opt4 TEXT
-        )
-        """)
+    # QUESTIONS
+    cursor.execute(f"""
+    CREATE TABLE IF NOT EXISTS questions (
+        id {"SERIAL PRIMARY KEY" if p=="%s" else "INTEGER PRIMARY KEY AUTOINCREMENT"},
+        question TEXT,
+        answer TEXT,
+        difficulty INTEGER,
+        type TEXT,
+        opt1 TEXT,
+        opt2 TEXT,
+        opt3 TEXT,
+        opt4 TEXT
+    )
+    """)
+
+    # PREVENIR SPAM DE XP
+    cursor.execute(f"""
+    CREATE TABLE IF NOT EXISTS answered (
+        user_id INTEGER,
+        question_id INTEGER
+    )
+    """)
 
     cursor.execute("SELECT COUNT(*) FROM questions")
     if cursor.fetchone()[0] == 0:
@@ -90,7 +74,6 @@ def init_db():
              "CREATE TABLE", "INSERT", "SELECT", "DROP"),
         ]
 
-        p = get_placeholder()
         cursor.executemany(
             f"INSERT INTO questions (question, answer, difficulty, type, opt1, opt2, opt3, opt4) VALUES ({p},{p},{p},{p},{p},{p},{p},{p})",
             perguntas
@@ -127,10 +110,10 @@ def home():
     cursor = conn.cursor()
     p = get_placeholder()
 
-    cursor.execute(f"SELECT username, xp FROM users WHERE id = {p}", (session["user_id"],))
+    cursor.execute(f"SELECT username, xp FROM users WHERE id={p}", (session["user_id"],))
     user = cursor.fetchone()
 
-    cursor.execute(f"SELECT * FROM questions ORDER BY RANDOM() LIMIT 1")
+    cursor.execute("SELECT * FROM questions ORDER BY RANDOM() LIMIT 1")
     q = cursor.fetchone()
 
     conn.close()
@@ -148,10 +131,22 @@ def home():
         }
     )
 
+# ==========================
+# REGISTER
+# ==========================
+
 @app.route("/register", methods=["GET","POST"])
 def register():
     error=None
+
     if request.method=="POST":
+        username = request.form["username"].strip()
+        password = request.form["password"].strip()
+
+        if not username or not password:
+            error = "Preencha todos os campos"
+            return render_template("register.html", error=error)
+
         conn=get_db()
         cursor=conn.cursor()
         p=get_placeholder()
@@ -159,34 +154,47 @@ def register():
         try:
             cursor.execute(
                 f"INSERT INTO users (username,password) VALUES ({p},{p})",
-                (request.form["username"], generate_password_hash(request.form["password"]))
+                (username, generate_password_hash(password))
             )
             conn.commit()
             return redirect("/login")
         except:
             error="Usuário já existe"
+
         conn.close()
 
     return render_template("register.html", error=error)
 
+# ==========================
+# LOGIN
+# ==========================
+
 @app.route("/login", methods=["GET","POST"])
 def login():
     error=None
+
     if request.method=="POST":
+        username = request.form["username"].strip()
+        password = request.form["password"].strip()
+
+        if not username or not password:
+            error="Preencha todos os campos"
+            return render_template("login.html", error=error)
+
         conn=get_db()
         cursor=conn.cursor()
         p=get_placeholder()
 
         cursor.execute(
             f"SELECT id,password FROM users WHERE username={p}",
-            (request.form["username"],)
+            (username,)
         )
         user=cursor.fetchone()
         conn.close()
 
         if not user:
             error="Usuário não existe"
-        elif not check_password_hash(user[1], request.form["password"]):
+        elif not check_password_hash(user[1], password):
             error="Senha incorreta"
         else:
             session["user_id"]=user[0]
@@ -194,12 +202,29 @@ def login():
 
     return render_template("login.html", error=error)
 
+# ==========================
+# ANSWER (ANTI-SPAM)
+# ==========================
+
 @app.route("/answer", methods=["POST"])
 def answer():
+    if "user_id" not in session:
+        return jsonify({"error":"não autorizado"}), 403
+
     data=request.get_json()
+
     conn=get_db()
     cursor=conn.cursor()
     p=get_placeholder()
+
+    # Verificar se já respondeu
+    cursor.execute(
+        f"SELECT * FROM answered WHERE user_id={p} AND question_id={p}",
+        (session["user_id"], data["id"])
+    )
+
+    if cursor.fetchone():
+        return jsonify({"result":"already_answered"})
 
     cursor.execute(f"SELECT answer FROM questions WHERE id={p}", (data["id"],))
     correct=cursor.fetchone()[0]
@@ -210,10 +235,61 @@ def answer():
     else:
         result="wrong"
 
+    # Registrar resposta
+    cursor.execute(
+        f"INSERT INTO answered (user_id, question_id) VALUES ({p},{p})",
+        (session["user_id"], data["id"])
+    )
+
     conn.commit()
     conn.close()
 
     return jsonify({"result":result,"correct_answer":correct})
+
+# ==========================
+# PROFILE (CORRIGIDO)
+# ==========================
+
+@app.route("/profile")
+def profile():
+    if "user_id" not in session:
+        return redirect("/login")
+
+    conn = get_db()
+    cursor = conn.cursor()
+    p = get_placeholder()
+
+    cursor.execute(f"SELECT username, xp FROM users WHERE id={p}", (session["user_id"],))
+    user = cursor.fetchone()
+    conn.close()
+
+    if not user:
+        return redirect("/logout")
+
+    return render_template("profile.html",
+        username=user[0],
+        xp=user[1],
+        level=get_level(user[1])
+    )
+
+# ==========================
+# RANKING (CORRIGIDO)
+# ==========================
+
+@app.route("/ranking")
+def ranking():
+    if "user_id" not in session:
+        return redirect("/login")
+
+    conn = get_db()
+    cursor = conn.cursor()
+
+    cursor.execute("SELECT username, xp FROM users ORDER BY xp DESC LIMIT 10")
+    users = cursor.fetchall()
+
+    conn.close()
+
+    return render_template("ranking.html", users=users)
 
 # ==========================
 # ADMIN
@@ -250,52 +326,16 @@ def delete_user(id):
 
     return redirect("/admin")
 
+# ==========================
+# LOGOUT
+# ==========================
+
 @app.route("/logout")
 def logout():
     session.clear()
     return redirect("/login")
 
-@app.route("/profile")
-def profile():
-    if "user_id" not in session:
-        return redirect("/login")
-
-    conn = get_db()
-    cursor = conn.cursor()
-
-    cursor.execute("SELECT username, xp FROM users WHERE id = ?", (session["user_id"],))
-    user = cursor.fetchone()
-
-    conn.close()
-
-    if not user:
-        return redirect("/logout")
-
-    level = get_level(user[1])
-
-    return render_template("profile.html",
-        username=user[0],
-        xp=user[1],
-        level=level
-    )
-
-@app.route("/ranking")
-def ranking():
-    if "user_id" not in session:
-        return redirect("/login")
-
-    conn = get_db()
-    cursor = conn.cursor()
-
-    # 🔥 PostgreSQL usa %s (não usa ?)
-    cursor.execute("SELECT username, xp FROM users ORDER BY xp DESC LIMIT 10")
-    users = cursor.fetchall()
-
-    conn.close()
-
-    return render_template("ranking.html", users=users)
+# ==========================
 
 if __name__=="__main__":
     app.run(debug=True)
-
-    
