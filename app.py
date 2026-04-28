@@ -1,16 +1,124 @@
+import os
 import sqlite3
 import unicodedata
 from flask import Flask, render_template, request, redirect, session, jsonify
 from werkzeug.security import generate_password_hash, check_password_hash
-from init_db import init_db
 
 app = Flask(__name__)
-app.secret_key = "segredo_super"
+app.secret_key = os.environ.get("SECRET_KEY", "segredo_super")
+
+# ==========================
+# DATABASE (AUTO SQLITE / POSTGRES)
+# ==========================
+
+def get_db():
+    db_url = os.environ.get("DATABASE_URL")
+
+    if db_url:
+        import psycopg2
+        conn = psycopg2.connect(db_url)
+    else:
+        conn = sqlite3.connect("database.db")
+
+    return conn
+
+
+def get_placeholder():
+    if os.environ.get("DATABASE_URL"):
+        return "%s"
+    return "?"
+
+
+# ==========================
+# INIT DB (FUNCIONA NOS DOIS)
+# ==========================
+
+def init_db():
+    conn = get_db()
+    cursor = conn.cursor()
+
+    is_postgres = os.environ.get("DATABASE_URL")
+
+    # USERS
+    if is_postgres:
+        cursor.execute("""
+        CREATE TABLE IF NOT EXISTS users (
+            id SERIAL PRIMARY KEY,
+            username TEXT UNIQUE,
+            password TEXT,
+            xp INTEGER DEFAULT 0
+        )
+        """)
+    else:
+        cursor.execute("""
+        CREATE TABLE IF NOT EXISTS users (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            username TEXT UNIQUE,
+            password TEXT,
+            xp INTEGER DEFAULT 0
+        )
+        """)
+
+    # QUESTIONS
+    if is_postgres:
+        cursor.execute("""
+        CREATE TABLE IF NOT EXISTS questions (
+            id SERIAL PRIMARY KEY,
+            question TEXT,
+            answer TEXT,
+            difficulty INTEGER,
+            type TEXT,
+            opt1 TEXT,
+            opt2 TEXT,
+            opt3 TEXT,
+            opt4 TEXT
+        )
+        """)
+    else:
+        cursor.execute("""
+        CREATE TABLE IF NOT EXISTS questions (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            question TEXT,
+            answer TEXT,
+            difficulty INTEGER,
+            type TEXT,
+            opt1 TEXT,
+            opt2 TEXT,
+            opt3 TEXT,
+            opt4 TEXT
+        )
+        """)
+
+    # INSERIR PERGUNTAS SE VAZIO
+    cursor.execute("SELECT COUNT(*) FROM questions")
+    count = cursor.fetchone()[0]
+
+    if count == 0:
+        perguntas = [
+            ("print('Hello World') → saída?", "hello world", 1, "text", None, None, None, None),
+            ("Qual comando cria uma tabela no SQL?", "create table", 1, "multiple",
+             "CREATE TABLE", "INSERT", "SELECT", "DROP"),
+            ("Complete: print('_____') → World", "world", 1, "cloze", None, None, None, None),
+            ("Monte: print('Hello World')", "print hello world", 1, "wordbank",
+             "print", "hello", "world", None),
+        ]
+
+        placeholder = get_placeholder()
+
+        cursor.executemany(
+            f"INSERT INTO questions (question, answer, difficulty, type, opt1, opt2, opt3, opt4) VALUES ({placeholder},{placeholder},{placeholder},{placeholder},{placeholder},{placeholder},{placeholder},{placeholder})",
+            perguntas
+        )
+
+    conn.commit()
+    conn.close()
+
 
 init_db()
 
-def get_db():
-    return sqlite3.connect("database.db")
+# ==========================
+# FUNÇÕES AUX
+# ==========================
 
 def get_level(xp):
     return xp // 50
@@ -29,7 +137,10 @@ def normalize(text):
         if unicodedata.category(c) != 'Mn'
     )
 
-# HOME
+# ==========================
+# ROTAS
+# ==========================
+
 @app.route("/")
 def home():
     if "user_id" not in session:
@@ -38,7 +149,9 @@ def home():
     conn = get_db()
     cursor = conn.cursor()
 
-    cursor.execute("SELECT username, xp FROM users WHERE id = ?", (session["user_id"],))
+    placeholder = get_placeholder()
+
+    cursor.execute(f"SELECT username, xp FROM users WHERE id = {placeholder}", (session["user_id"],))
     user = cursor.fetchone()
 
     if not user:
@@ -51,15 +164,12 @@ def home():
     xp_next = (level + 1) * 50
 
     cursor.execute(
-        "SELECT * FROM questions WHERE difficulty = ? ORDER BY RANDOM() LIMIT 1",
+        f"SELECT * FROM questions WHERE difficulty = {placeholder} ORDER BY RANDOM() LIMIT 1",
         (difficulty,)
     )
     question = cursor.fetchone()
 
     conn.close()
-
-    if not question:
-        return "Sem perguntas cadastradas"
 
     return render_template("index.html",
         username=user[0],
@@ -74,7 +184,6 @@ def home():
         }
     )
 
-# REGISTER
 @app.route("/register", methods=["GET", "POST"])
 def register():
     error = None
@@ -88,10 +197,11 @@ def register():
         else:
             conn = get_db()
             cursor = conn.cursor()
+            placeholder = get_placeholder()
 
             try:
                 cursor.execute(
-                    "INSERT INTO users (username, password) VALUES (?, ?)",
+                    f"INSERT INTO users (username, password) VALUES ({placeholder}, {placeholder})",
                     (username, generate_password_hash(password))
                 )
                 conn.commit()
@@ -102,7 +212,6 @@ def register():
 
     return render_template("register.html", error=error)
 
-# LOGIN
 @app.route("/login", methods=["GET", "POST"])
 def login():
     error = None
@@ -111,45 +220,48 @@ def login():
         username = request.form["username"]
         password = request.form["password"]
 
-        if not username or not password:
-            error = "Preencha todos os campos"
+        conn = get_db()
+        cursor = conn.cursor()
+        placeholder = get_placeholder()
+
+        cursor.execute(
+            f"SELECT id, password FROM users WHERE username = {placeholder}",
+            (username,)
+        )
+        user = cursor.fetchone()
+        conn.close()
+
+        if not user:
+            error = "Usuário não existe"
+        elif not check_password_hash(user[1], password):
+            error = "Senha incorreta"
         else:
-            conn = get_db()
-            cursor = conn.cursor()
-
-            cursor.execute("SELECT id, password FROM users WHERE username = ?", (username,))
-            user = cursor.fetchone()
-
-            conn.close()
-
-            if not user:
-                error = "Usuário não existe"
-            elif not check_password_hash(user[1], password):
-                error = "Senha incorreta"
-            else:
-                session["user_id"] = user[0]
-                return redirect("/")
+            session["user_id"] = user[0]
+            return redirect("/")
 
     return render_template("login.html", error=error)
 
-# ANSWER
 @app.route("/answer", methods=["POST"])
 def answer():
     data = request.get_json()
 
-    user_answer = data["answer"]
-    question_id = data["id"]
-
     conn = get_db()
     cursor = conn.cursor()
+    placeholder = get_placeholder()
 
-    cursor.execute("SELECT answer FROM questions WHERE id = ?", (question_id,))
+    cursor.execute(
+        f"SELECT answer FROM questions WHERE id = {placeholder}",
+        (data["id"],)
+    )
     correct_answer = cursor.fetchone()[0]
 
-    correct = normalize(user_answer) == normalize(correct_answer)
+    correct = normalize(data["answer"]) == normalize(correct_answer)
 
     if correct:
-        cursor.execute("UPDATE users SET xp = xp + 10 WHERE id = ?", (session["user_id"],))
+        cursor.execute(
+            f"UPDATE users SET xp = xp + 10 WHERE id = {placeholder}",
+            (session["user_id"],)
+        )
 
     conn.commit()
     conn.close()
@@ -159,32 +271,6 @@ def answer():
         "correct_answer": correct_answer
     })
 
-# PROFILE
-@app.route("/profile")
-def profile():
-    if "user_id" not in session:
-        return redirect("/login")
-
-    conn = get_db()
-    cursor = conn.cursor()
-
-    cursor.execute("SELECT username, xp FROM users WHERE id = ?", (session["user_id"],))
-    user = cursor.fetchone()
-
-    conn.close()
-
-    xp = user[1]
-    level = get_level(xp)
-    xp_next = (level + 1) * 50
-
-    return render_template("profile.html",
-        username=user[0],
-        xp=xp,
-        xp_next=xp_next,
-        level=level
-    )
-
-# LOGOUT
 @app.route("/logout")
 def logout():
     session.clear()
