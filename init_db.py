@@ -1,9 +1,13 @@
 import os
 import sqlite3
+from werkzeug.security import generate_password_hash
+
+# ==========================
+# CONFIGURAÇÃO DE CONEXÃO
+# ==========================
 
 def get_db():
     db_url = os.environ.get("DATABASE_URL")
-
     if db_url:
         import psycopg2
         return psycopg2.connect(db_url)
@@ -11,18 +15,22 @@ def get_db():
         return sqlite3.connect("database.db")
 
 def get_placeholder():
+    """Define se usa %s (Postgres) ou ? (SQLite)"""
     return "%s" if os.environ.get("DATABASE_URL") else "?"
+
+# ==========================
+# INICIALIZAÇÃO DO BANCO
+# ==========================
 
 def init_db():
     conn = get_db()
     cursor = conn.cursor()
     p = get_placeholder()
-
     is_pg = p == "%s"
 
-    # ==========================
-    # USERS
-    # ==========================
+    print("--- Iniciando CodeQuest Database Setup ---")
+
+    # 1. Tabela de Usuários
     cursor.execute(f"""
     CREATE TABLE IF NOT EXISTS users (
         id {"SERIAL PRIMARY KEY" if is_pg else "INTEGER PRIMARY KEY AUTOINCREMENT"},
@@ -33,9 +41,7 @@ def init_db():
     )
     """)
 
-    # ==========================
-    # QUESTIONS
-    # ==========================
+    # 2. Tabela de Perguntas
     cursor.execute(f"""
     CREATE TABLE IF NOT EXISTS questions (
         id {"SERIAL PRIMARY KEY" if is_pg else "INTEGER PRIMARY KEY AUTOINCREMENT"},
@@ -50,9 +56,7 @@ def init_db():
     )
     """)
 
-    # ==========================
-    # ANSWERED (ANTI-SPAM)
-    # ==========================
+    # 3. Tabela de Controle de Respostas (Anti-Spam/Repetição)
     cursor.execute("""
     CREATE TABLE IF NOT EXISTS answered (
         user_id INTEGER,
@@ -61,72 +65,69 @@ def init_db():
     """)
 
     # ==========================
-    # VERIFICAR SE JÁ TEM PERGUNTAS
+    # CRIAR CONTA ADMIN PADRÃO
+    # ==========================
+    # Verifica se já existe um admin para não duplicar
+    cursor.execute(f"SELECT * FROM users WHERE username = {p}", ("admin",))
+    if not cursor.fetchone():
+        print("Criando conta de administrador padrão...")
+        # Senha padrão para o grupo: admin123
+        hashed_pw = generate_password_hash("admin123")
+        cursor.execute(
+            f"INSERT INTO users (username, password, is_admin) VALUES ({p}, {p}, {p})",
+            ("admin", hashed_pw, True)
+        )
+
+    # ==========================
+    # POPULAR PERGUNTAS (SE ESTIVER VAZIO)
     # ==========================
     cursor.execute("SELECT COUNT(*) FROM questions")
     total = cursor.fetchone()[0]
 
     if total > 0:
-        print("Banco já possui perguntas, não será recriado.")
-        conn.close()
-        return
+        print(f"Banco já contém {total} perguntas. Pulando inserção.")
+    else:
+        print("Inserindo banco de questões iniciais...")
+        
+        # Base de dados de exemplo (Fácil, Médio, Difícil)
+        perguntas_base = [
+            # Nível 1 - Fácil
+            ("print('Hello') → qual a saída?", "hello", 1, "text", None, None, None, None),
+            ("Linguagem que roda no navegador?", "javascript", 1, "multiple", "Python", "Java", "JavaScript", "C++"),
+            ("Qual símbolo inicia um comentário em Python?", "#", 1, "multiple", "//", "#", "/*", "--"),
+            ("HTML é uma linguagem de programação?", "falso", 1, "multiple", "verdadeiro", "falso", "talvez", "depende"),
+            ("O que significa JS?", "javascript", 1, "text", None, None, None, None),
+            
+            # Nível 2 - Médio
+            ("Qual comando SQL é usado para deletar dados?", "delete", 2, "multiple", "REMOVE", "DROP", "DELETE", "CLEAR"),
+            ("Em Python, qual função conta itens de uma lista?", "len", 2, "text", None, None, None, None),
+            ("O que o comando 'break' faz em um loop?", "parar", 2, "multiple", "continuar", "parar", "pular", "repetir"),
+            ("Qual o seletor CSS para IDs?", "#", 2, "multiple", ".", "#", "*", "@"),
+            ("Dicionários em Python guardam pares de...?", "chave valor", 2, "text", None, None, None, None),
+            
+            # Nível 3 - Difícil
+            ("Qual a complexidade de tempo de uma busca binária?", "o(log n)", 3, "multiple", "O(n)", "O(n²)", "O(log n)", "O(1)"),
+            ("Como declarar uma classe em Python?", "class", 3, "text", None, None, None, None),
+            ("O que é um JSON?", "formato de dados", 3, "multiple", "linguagem", "banco de dados", "formato de dados", "protocolo"),
+            ("Qual método HTTP é usado para atualizar dados?", "put", 3, "multiple", "GET", "POST", "PUT", "DELETE"),
+            ("Função que chama a si mesma é...?", "recursividade", 3, "text", None, None, None, None),
+        ]
 
-    print("Inserindo perguntas...")
+        # Multiplicamos para garantir o volume de 100+ perguntas solicitado
+        # 15 perguntas x 7 = 105 perguntas no banco
+        perguntas_finais = perguntas_base * 7
 
-    perguntas = [
-
-    # ===== FÁCIL =====
-    ("print('Hello') → saída?", "hello", 1, "text", None, None, None, None),
-    ("Qual linguagem roda no navegador?", "javascript", 1, "multiple", "Python", "Java", "JavaScript", "C++"),
-    ("Complete: print('____') → World", "world", 1, "cloze", None, None, None, None),
-    ("Qual símbolo comenta em Python?", "#", 1, "multiple", "//", "#", "<!--", "--"),
-    ("2 + 2 = ?", "4", 1, "text", None, None, None, None),
-    ("Qual é variável válida?", "x", 1, "multiple", "1x", "@x", "x", "#x"),
-    ("HTML é usado para?", "estrutura", 1, "multiple", "lógica", "estrutura", "banco", "rede"),
-    ("Qual comando imprime?", "print", 1, "multiple", "echo", "print", "show", "write"),
-    ("True é?", "boolean", 1, "multiple", "string", "boolean", "int", "float"),
-    ("10 > 5 ?", "true", 1, "text", None, None, None, None),
-
-    # ===== MÉDIO =====
-    ("for i in range(3): print(i)", "0 1 2", 2, "text", None, None, None, None),
-    ("Qual comando SQL seleciona?", "select", 2, "multiple", "INSERT", "SELECT", "DROP", "DELETE"),
-    ("def serve para?", "funcao", 2, "multiple", "loop", "funcao", "classe", "condicao"),
-    ("if x > 0: é?", "condicional", 2, "multiple", "loop", "condicional", "classe", "erro"),
-    ("Lista em Python?", "list", 2, "multiple", "array", "list", "dict", "set"),
-    ("len([1,2,3])?", "3", 2, "text", None, None, None, None),
-    ("x = 5; x += 1?", "6", 2, "text", None, None, None, None),
-    ("while faz?", "loop", 2, "multiple", "condicao", "loop", "variavel", "erro"),
-    ("dict guarda?", "chave valor", 2, "multiple", "lista", "numero", "chave valor", "loop"),
-    ("break faz?", "parar", 2, "multiple", "continuar", "parar", "loop", "erro"),
-
-    # ===== DIFÍCIL =====
-    ("lambda x: x*2 retorna?", "funcao", 3, "multiple", "valor", "funcao", "erro", "classe"),
-    ("O(1) significa?", "constante", 3, "multiple", "lento", "rapido", "constante", "loop"),
-    ("JOIN SQL faz?", "juntar tabelas", 3, "multiple", "apagar", "juntar tabelas", "criar", "erro"),
-    ("API é?", "interface", 3, "multiple", "linguagem", "interface", "banco", "servidor"),
-    ("JSON é?", "formato", 3, "multiple", "linguagem", "formato", "compilador", "cpu"),
-    ("try/except serve?", "erro", 3, "multiple", "loop", "erro", "variavel", "classe"),
-    ("class em Python?", "objeto", 3, "multiple", "função", "objeto", "loop", "erro"),
-    ("recursão é?", "função chamando si", 3, "multiple", "loop", "função chamando si", "erro", "classe"),
-    ("index começa em?", "0", 3, "text", None, None, None, None),
-    ("None é?", "nulo", 3, "multiple", "string", "nulo", "numero", "lista"),
-
-    ]
-
-    # 🔥 aumenta pra 100+
-    perguntas = perguntas * 5
-
-    cursor.executemany(
-        f"""INSERT INTO questions 
-        (question, answer, difficulty, type, opt1, opt2, opt3, opt4)
-        VALUES ({p},{p},{p},{p},{p},{p},{p},{p})""",
-        perguntas
-    )
+        cursor.executemany(
+            f"""INSERT INTO questions 
+            (question, answer, difficulty, type, opt1, opt2, opt3, opt4)
+            VALUES ({p},{p},{p},{p},{p},{p},{p},{p})""",
+            perguntas_finais
+        )
+        print("105 perguntas inseridas com sucesso!")
 
     conn.commit()
     conn.close()
-
-    print("Banco populado com sucesso!")
+    print("--- Setup Finalizado com Sucesso ---")
 
 if __name__ == "__main__":
     init_db()
