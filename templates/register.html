@@ -1,27 +1,41 @@
 <!DOCTYPE html>
-<html>
-
+<html lang="pt-br">
 <head>
-<title>Cadastro</title>
-<link rel="stylesheet" href="/static/style.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cadastro - CodeQuest</title>
+    <link rel="stylesheet" href="/static/style.css">
 </head>
-
 <body>
 
-<h1>Criar Conta</h1>
+    <div class="quiz"> <h1>Criar Conta</h1>
 
-<form method="POST">
+        <form method="POST">
+            <input name="username" 
+                   type="text" 
+                   placeholder="Escolha um Usuário (máx 15)" 
+                   maxlength="15" 
+                   required 
+                   pattern="[a-zA-Z0-9]+" 
+                   title="Use apenas letras e números, sem espaços ou símbolos.">
 
-<input name="username" placeholder="Usuário">
+            <input name="password" 
+                   type="password" 
+                   placeholder="Crie uma Senha (máx 20)" 
+                   maxlength="20" 
+                   required>
 
-<input type="password" name="password" placeholder="Senha">
+            <button type="submit">Cadastrar Agora</button>
+        </form>
 
-<button>Cadastrar</button>
+        {% if error %}
+            <p style="color: #ef4444; margin-top: 15px; font-weight: bold;">{{error}}</p>
+        {% endif %}
 
-</form>
-
-<a href="/login">Voltar</a>
+        <p style="margin-top: 20px;">
+            <a href="/login">Já tem uma conta? Entrar</a>
+        </p>
+    </div>
 
 </body>
-
 </html>

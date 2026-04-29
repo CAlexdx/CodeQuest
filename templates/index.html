@@ -1,72 +1,122 @@
 <!DOCTYPE html>
-<html>
-
+<html lang="pt-br">
 <head>
-<title>CodeQuest</title>
-<link rel="stylesheet" href="/static/style.css">
-</head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CodeQuest - Desafio</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <style>
+        /* Ajustes de UX para evitar bugs visuais */
+        .status-bar {
+            background: #1e293b;
+            padding: 15px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        .status-item { font-size: 14px; font-weight: bold; }
+        .user-name { color: #38bdf8; }
+        
+        /* Estilo para a frase que está sendo montada no Wordbank */
+        #montagem {
+            min-height: 40px;
+            background: #0f172a;
+            border: 2px dashed #38bdf8;
+            border-radius: 8px;
+            margin: 15px 0;
+            padding: 10px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 5px;
+            flex-wrap: wrap;
+        }
 
+        /* Botões de múltipla escolha empilhados corretamente */
+        .area-botoes {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            align-items: center;
+        }
+    </style>
+</head>
 <body>
 
-<h1>CodeQuest</h1>
+    <header>
+        <h1>🚀 CodeQuest</h1>
+        <div class="status-bar">
+            <span class="status-item">👤 <span class="user-name">{{username}}</span></span>
+            <span class="status-item">⭐ XP: {{xp}} / {{xp_next}}</span>
+            <span class="status-item">🏅 Nível: {{level}}</span>
+        </div>
+        <nav>
+            <a href="/profile">Perfil</a>
+            <a href="/ranking">Ranking</a>
+            <a href="/logout" style="color: #ef4444;">Sair</a>
+        </nav>
+    </header>
 
-<p>Usuário: {{username}}</p>
-<p>XP: {{xp}} / {{xp_next}}</p>
-<p>Nível: {{level}}</p>
+    <main class="quiz">
+        {% if question %}
+            <h2>{{ question["question"] }}</h2>
 
-<a href="/profile">Perfil</a>
-<a href="/ranking">Ranking</a>
-<a href="/logout">Sair</a>
+            <div id="area-resposta">
+                {# Múltipla Escolha #}
+                {% if question["type"] == "multiple" %}
+                    <div class="area-botoes">
+                        {% for opt in question["options"] if opt %}
+                            <button onclick="responder('{{opt}}')">{{opt}}</button>
+                        {% endfor %}
+                    </div>
+                {% endif %}
 
-<div class="quiz">
+                {# Resposta de Texto e Cloze (Com limite de caracteres) #}
+                {% if question["type"] in ["text", "cloze"] %}
+                    <input type="text" id="resposta" 
+                           placeholder="{{ 'Complete o código' if question['type'] == 'cloze' else 'Digite sua resposta' }}"
+                           maxlength="100" 
+                           required 
+                           autocomplete="off">
+                    <button onclick="enviar()">Responder</button>
+                {% endif %}
 
-<h2>{{ question["question"] }}</h2>
+                {# Word Bank (Montagem de código) #}
+                {% if question["type"] == "wordbank" %}
+                    <div id="wordbank">
+                        {% for opt in question["options"] if opt %}
+                            <button onclick="addWord('{{opt}}')" style="width: auto; margin: 5px;">{{opt}}</button>
+                        {% endfor %}
+                    </div>
 
-<div id="area-resposta">
-
-{% if question["type"] == "multiple" %}
-    {% for opt in question["options"] %}
-        {% if opt %}
-            <button onclick="responder('{{opt}}')">{{opt}}</button><br><br>
+                    <div id="montagem"></div> <button onclick="enviarMontagem()">Confirmar Resposta</button>
+                    <button onclick="limparMontagem()" style="background: #64748b; margin-top: 10px;">Limpar</button>
+                {% endif %}
+            </div>
+        {% else %}
+            <p>Você respondeu todas as perguntas por enquanto! Volte mais tarde.</p>
         {% endif %}
-    {% endfor %}
-{% endif %}
+    </main>
 
-{% if question["type"] == "text" %}
-    <input id="resposta" placeholder="Digite sua resposta">
-    <button onclick="enviar()">Responder</button>
-{% endif %}
+    <p id="resultado"></p>
 
-{% if question["type"] == "cloze" %}
-    <input id="resposta" placeholder="Complete o código">
-    <button onclick="enviar()">Responder</button>
-{% endif %}
-
-{% if question["type"] == "wordbank" %}
-    <div id="wordbank">
-        {% for opt in question["options"] %}
-            {% if opt %}
-                <button onclick="addWord('{{opt}}')">{{opt}}</button>
-            {% endif %}
-        {% endfor %}
-    </div>
-
-    <p id="montagem"></p>
-    <button onclick="enviarMontagem()">Responder</button>
-{% endif %}
-
-</div>
-
-</div>
-
-<p id="resultado"></p>
-
-<script>
-const question_id = "{{question['id']}}"
-</script>
-
-<script src="/static/script.js"></script>
+    <script>
+        // Passando o ID de forma segura para o JS
+        const question_id = "{{question['id'] if question else ''}}";
+        
+        // Função auxiliar para o botão de limpar do wordbank
+        function limparMontagem() {
+            if(typeof frase !== 'undefined') {
+                frase = [];
+                document.getElementById("montagem").innerText = "";
+            }
+        }
+    </script>
+    <script src="/static/script.js"></script>
 
 </body>
-
 </html>

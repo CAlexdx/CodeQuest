@@ -1,34 +1,118 @@
 <!DOCTYPE html>
-<html>
-
+<html lang="pt-br">
 <head>
-<title>Admin</title>
-<link rel="stylesheet" href="/static/style.css">
+    <meta charset="UTF-8">
+    <title>Admin - CodeQuest</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <style>
+        /* Ajustes finos para o painel não fugir do seu padrão */
+        .admin-container {
+            max-width: 900px;
+            margin: 0 auto;
+            text-align: left;
+        }
+        .card-admin {
+            background: #1e293b;
+            padding: 20px;
+            border-radius: 16px;
+            margin-bottom: 30px;
+            box-shadow: 0 0 15px rgba(0,0,0,0.5);
+        }
+        h2 { color: #38bdf8; margin-bottom: 15px; border-bottom: 1px solid #334155; padding-bottom: 10px; }
+        
+        /* Estilo para os inputs de XP dentro da tabela */
+        .input-xp {
+            width: 70px !important; /* Sobrescreve o 90% do seu CSS */
+            padding: 5px !important;
+            margin: 0 !important;
+            display: inline-block;
+        }
+        .btn-pequeno {
+            width: auto !important;
+            padding: 5px 10px !important;
+            font-size: 14px;
+            background: #22c55e;
+        }
+        .btn-danger { background: #ef4444; width: auto !important; padding: 5px 10px !important; font-size: 14px;}
+        .btn-danger:hover { background: #dc2626; }
+        
+        .badge {
+            background: #38bdf8;
+            color: #0f172a;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+    </style>
 </head>
-
 <body>
 
-<h1>Painel Admin</h1>
+    <div class="admin-container">
+        <h1>🛡️ Painel Administrativo</h1>
+        <a href="/">⬅ Voltar para o Início</a>
 
-<table>
-<tr>
-<th>ID</th>
-<th>Usuário</th>
-<th>XP</th>
-<th>Ação</th>
-</tr>
+        <div class="card-admin">
+            <h2>Lista de Usuários</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Usuário</th>
+                        <th>XP</th>
+                        <th>Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for u in users %}
+                    <tr>
+                        <td>
+                            {{ u[1] }} 
+                            {% if u[3] %}<span class="badge">ADMIN</span>{% endif %}
+                        </td>
+                        <td>
+                            <form action="/admin/set_xp" method="POST" style="display: flex; align-items: center; gap: 5px;">
+                                <input type="hidden" name="user_id" value="{{ u[0] }}">
+                                <input type="number" name="xp" value="{{ u[2] }}" class="input-xp">
+                                <button type="submit" class="btn-pequeno">Salvar</button>
+                            </form>
+                        </td>
+                        <td>
+                            <a href="/admin/toggle_admin/{{ u[0] }}" style="font-size: 12px; color: #94a3b8;">
+                                [{{ "Rebaixar" if u[3] else "Promover" }}]
+                            </a>
+                            <a href="/admin/delete_user/{{ u[0] }}" class="btn-danger" style="border-radius: 8px; margin-left: 10px;" 
+                               onclick="return confirm('Deletar o usuário {{ u[1] }}?')">Excluir</a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
 
-{% for u in users %}
-<tr>
-<td>{{u[0]}}</td>
-<td>{{u[1]}}</td>
-<td>{{u[2]}}</td>
-<td><a href="/delete_user/{{u[0]}}">Excluir</a></td>
-</tr>
-{% endfor %}
-
-</table>
+        <div class="card-admin">
+            <h2>Estatísticas do Banco</h2>
+            <p>Total de questões: <strong>{{ questions|length }}</strong></p>
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Pergunta</th>
+                        <th>Nível</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for q in questions[:5] %}
+                    <tr>
+                        <td>{{ q[0] }}</td>
+                        <td>{{ q[1] }}</td>
+                        <td>{{ q[2] }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            <p style="font-size: 12px; color: #94a3b8; margin-top: 10px;">Exibindo as 5 questões mais recentes.</p>
+        </div>
+    </div>
 
 </body>
-
 </html>

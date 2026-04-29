@@ -1,33 +1,62 @@
 <!DOCTYPE html>
-<html>
+<html lang="pt-br">
 <head>
-<title>Ranking</title>
-<link rel="stylesheet" href="/static/style.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ranking - CodeQuest</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <style>
+        /* Ajuste para garantir que a tabela não transborde no mobile */
+        .ranking-container {
+            overflow-x: auto;
+            width: 100%;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        /* Destaque para os 3 primeiros */
+        tr:nth-child(2) td:first-child { color: #ffd700; font-weight: bold; } /* Ouro */
+        tr:nth-child(3) td:first-child { color: #c0c0c0; font-weight: bold; } /* Prata */
+        tr:nth-child(4) td:first-child { color: #cd7f32; font-weight: bold; } /* Bronze */
+        
+        /* Evita que nomes muito longos quebrem a linha */
+        td {
+            max-width: 150px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+    </style>
 </head>
-
 <body>
 
-<h1>Ranking</h1>
+    <h1>🏆 Ranking Global</h1>
 
-<table>
-<tr>
-<th>#</th>
-<th>Usuário</th>
-<th>XP</th>
-</tr>
+    <div class="ranking-container">
+        <table>
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Usuário</th>
+                    <th>XP</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for user in users %}
+                <tr>
+                    <td>{{ loop.index }}º</td>
+                    <td title="{{ user.username }}">{{ user.username }}</td>
+                    <td>{{ user.xp }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
 
-{% for user in users %}
-<tr>
-<td>{{ loop.index }}</td>
-<td>{{ user.username }}</td>
-<td>{{ user.xp }}</td>
-</tr>
-{% endfor %}
-
-</table>
-
-<br>
-<a href="/">Voltar</a>
+    <div style="margin-top: 30px;">
+        <a href="/" class="btn-voltar" style="background: #3b82f6; color: white; padding: 12px 25px; border-radius: 12px; text-decoration: none;">
+            Voltar ao Início
+        </a>
+    </div>
 
 </body>
 </html>
