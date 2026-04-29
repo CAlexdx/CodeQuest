@@ -333,6 +333,11 @@ def logout():
     return redirect("/login")
 
 # ==========================
+# AUTO INIT DB (IMPORTANTE)
+# ==========================
+
+from init_db import init_db
+init_db()
 
 if __name__=="__main__":
     app.run(debug=True)
