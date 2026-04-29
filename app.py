@@ -201,8 +201,11 @@ def admin():
     
     conn = get_db()
     cursor = conn.cursor()
+    # Pega todos os usuários para a tabela de gestão
     cursor.execute("SELECT id, username, xp, is_admin FROM users ORDER BY id ASC")
     users = cursor.fetchall()
+    
+    # Pega as questões para conferência
     cursor.execute("SELECT id, question, difficulty FROM questions ORDER BY id DESC")
     questions = cursor.fetchall()
     conn.close()
@@ -211,30 +214,65 @@ def admin():
 @app.route("/admin/set_xp", methods=["POST"])
 def set_xp():
     if not is_admin(): return "Acesso negado", 403
+    
     user_id = request.form.get("user_id")
     xp = request.form.get("xp")
+    
     conn = get_db()
     cursor = conn.cursor()
     p = get_placeholder()
+    
     cursor.execute(f"UPDATE users SET xp={p} WHERE id={p}", (xp, user_id))
     conn.commit()
+    conn.close()
+    return redirect("/admin")
+
+@app.route("/admin/toggle_admin/<int:user_id>")
+def toggle_admin(user_id):
+    """ Rota para promover ou rebaixar um usuário """
+    if not is_admin(): return "Acesso negado", 403
+    
+    # Segurança: Impede que o admin logado remova seu próprio cargo
+    if user_id == session.get("user_id"):
+        return "Erro: Você não pode remover seu próprio acesso administrativo.", 400
+
+    conn = get_db()
+    cursor = conn.cursor()
+    p = get_placeholder()
+
+    # Busca o status atual
+    cursor.execute(f"SELECT is_admin FROM users WHERE id={p}", (user_id,))
+    user = cursor.fetchone()
+    
+    if user:
+        # Inverte o status: se era True (1) vira False (0) e vice-versa
+        novo_status = not bool(user[0])
+        cursor.execute(f"UPDATE users SET is_admin={p} WHERE id={p}", (novo_status, user_id))
+        conn.commit()
+    
     conn.close()
     return redirect("/admin")
 
 @app.route("/admin/delete_user/<int:user_id>")
 def delete_user(user_id):
     if not is_admin(): return "Acesso negado", 403
-    if user_id == session["user_id"]: return "Não pode se auto-deletar", 400
+    
+    # Segurança: Impede que o admin logado se delete
+    if user_id == session.get("user_id"):
+        return "Erro: Você não pode deletar sua própria conta enquanto está logado.", 400
+        
     conn = get_db()
     cursor = conn.cursor()
     p = get_placeholder()
-    # Limpa as tabelas ligadas ao usuário antes de deletá-lo
+    
+    # Limpa o histórico de respostas do usuário primeiro (integridade do banco)
     cursor.execute(f"DELETE FROM answered WHERE user_id={p}", (user_id,))
+    # Deleta o usuário
     cursor.execute(f"DELETE FROM users WHERE id={p}", (user_id,))
+    
     conn.commit()
     conn.close()
     return redirect("/admin")
-
 # ==========================
 # SOCIAL E PERFIL
 # ==========================
