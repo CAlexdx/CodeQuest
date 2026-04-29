@@ -24,7 +24,7 @@ def get_placeholder():
     return "%s" if os.environ.get("DATABASE_URL") else "?"
 
 # ==========================
-# INIT DB (AGORA COMPLETO)
+# INIT DB
 # ==========================
 
 def init_db():
@@ -58,7 +58,7 @@ def init_db():
     )
     """)
 
-    # RESPOSTAS (ANTI-REPETIÇÃO)
+    # ANSWERED
     cursor.execute("""
     CREATE TABLE IF NOT EXISTS answered (
         user_id INTEGER,
@@ -93,7 +93,7 @@ def normalize(text):
     )
 
 # ==========================
-# HOME (SISTEMA DUOLINGO)
+# HOME (CORRIGIDO TOTAL)
 # ==========================
 
 @app.route("/")
@@ -115,10 +115,10 @@ def home():
     level = get_level(user[1])
     difficulty = get_difficulty(level)
 
-    # pergunta NÃO respondida
+    # 🔥 busca pergunta (NÃO REPETIDA)
     cursor.execute(f"""
     SELECT * FROM questions 
-    WHERE difficulty={p}
+    WHERE difficulty <= {p}
     AND id NOT IN (
         SELECT question_id FROM answered WHERE user_id={p}
     )
@@ -128,18 +128,23 @@ def home():
 
     q = cursor.fetchone()
 
-    # se acabou as perguntas → reinicia ciclo
+    # 🔥 se não achou → reset progresso de perguntas
     if not q:
         cursor.execute(f"DELETE FROM answered WHERE user_id={p}", (session["user_id"],))
         conn.commit()
 
         cursor.execute(f"""
         SELECT * FROM questions 
-        WHERE difficulty={p}
+        WHERE difficulty <= {p}
         ORDER BY RANDOM()
         LIMIT 1
         """, (difficulty,))
         q = cursor.fetchone()
+
+    # 🔥 proteção final (evita crash)
+    if not q:
+        conn.close()
+        return "Erro: banco sem perguntas. Rode o init_db ou insira perguntas no PostgreSQL."
 
     conn.close()
 
@@ -228,7 +233,7 @@ def login():
     return render_template("login.html", error=error)
 
 # ==========================
-# ANSWER (ANTI-SPAM REAL)
+# ANSWER (ANTI-SPAM)
 # ==========================
 
 @app.route("/answer", methods=["POST"])
@@ -242,7 +247,7 @@ def answer():
     cursor=conn.cursor()
     p=get_placeholder()
 
-    # bloqueia múltiplos cliques
+    # bloqueia spam
     cursor.execute(
         f"SELECT 1 FROM answered WHERE user_id={p} AND question_id={p}",
         (session["user_id"], data["id"])
@@ -252,7 +257,12 @@ def answer():
         return jsonify({"result":"already_answered"})
 
     cursor.execute(f"SELECT answer FROM questions WHERE id={p}", (data["id"],))
-    correct=cursor.fetchone()[0]
+    row = cursor.fetchone()
+
+    if not row:
+        return jsonify({"error":"pergunta não encontrada"})
+
+    correct=row[0]
 
     if normalize(data["answer"])==normalize(correct):
         cursor.execute(f"UPDATE users SET xp=xp+10 WHERE id={p}", (session["user_id"],))

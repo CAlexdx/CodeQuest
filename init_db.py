@@ -18,12 +18,14 @@ def init_db():
     cursor = conn.cursor()
     p = get_placeholder()
 
+    is_pg = p == "%s"
+
     # ==========================
     # USERS
     # ==========================
     cursor.execute(f"""
     CREATE TABLE IF NOT EXISTS users (
-        id {"SERIAL PRIMARY KEY" if p=="%s" else "INTEGER PRIMARY KEY AUTOINCREMENT"},
+        id {"SERIAL PRIMARY KEY" if is_pg else "INTEGER PRIMARY KEY AUTOINCREMENT"},
         username TEXT UNIQUE,
         password TEXT,
         xp INTEGER DEFAULT 0,
@@ -36,7 +38,7 @@ def init_db():
     # ==========================
     cursor.execute(f"""
     CREATE TABLE IF NOT EXISTS questions (
-        id {"SERIAL PRIMARY KEY" if p=="%s" else "INTEGER PRIMARY KEY AUTOINCREMENT"},
+        id {"SERIAL PRIMARY KEY" if is_pg else "INTEGER PRIMARY KEY AUTOINCREMENT"},
         question TEXT,
         answer TEXT,
         difficulty INTEGER,
@@ -59,13 +61,17 @@ def init_db():
     """)
 
     # ==========================
-    # LIMPAR PERGUNTAS (IMPORTANTE)
+    # VERIFICAR SE JÁ TEM PERGUNTAS
     # ==========================
-    cursor.execute("DELETE FROM questions")
+    cursor.execute("SELECT COUNT(*) FROM questions")
+    total = cursor.fetchone()[0]
 
-    # ==========================
-    # PERGUNTAS (100+)
-    # ==========================
+    if total > 0:
+        print("Banco já possui perguntas, não será recriado.")
+        conn.close()
+        return
+
+    print("Inserindo perguntas...")
 
     perguntas = [
 
@@ -107,7 +113,7 @@ def init_db():
 
     ]
 
-    # DUPLICAR PARA TER +100
+    # 🔥 aumenta pra 100+
     perguntas = perguntas * 5
 
     cursor.executemany(
