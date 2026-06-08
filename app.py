@@ -5,6 +5,12 @@ from flask import Flask, render_template, request, redirect, session, jsonify
 from werkzeug.security import generate_password_hash, check_password_hash
 
 app = Flask(__name__)
+from init_db import init_db
+
+try:
+    init_db()
+except Exception as e:
+    print(e)
 app.secret_key = os.environ.get("SECRET_KEY", "segredo_super_codequest")
 
 # ==========================
