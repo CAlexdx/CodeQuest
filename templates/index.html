@@ -1,58 +1,38 @@
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>CodeQuest</title>
-<link rel="stylesheet" href="/static/style.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CodeQuest</title>
+    <link rel="stylesheet" href="/static/style.css">
 </head>
 <body>
 
-<header class="topbar">
-    <h1>🚀 CodeQuest</h1>
+    <header>
+        <h1>🚀 CodeQuest</h1>
+    </header>
 
     <div class="status-bar">
-        <span>👤 {{ username }}</span>
-        <span>⭐ {{ xp }} XP</span>
-        <span>🏆 Nível {{ level }}</span>
-        <span>🔥 {{ streak }}</span>
+        <span class="status-item"><span class="user-name">👤 {{ username }}</span></span>
+        <span class="status-item">⭐ {{ xp }} XP</span>
+        <span class="status-item">🏆 Nível {{ level }}</span>
+        <span class="status-item">🔥 {{ streak }}</span>
     </div>
-</header>
 
-<main class="home-container">
-
-    <div class="welcome-card">
+    <div class="quiz">
         <h2>Bem-vindo de volta!</h2>
-        <p>Continue sua jornada nas trilhas de programação.</p>
+        <p style="margin-bottom: 24px;">Continue sua jornada nas trilhas de programação.</p>
+
+        <div class="btn-container">
+            <a href="/trilhas" class="btn-jogar">🗺️ Trilhas de Aprendizagem</a>
+            <a href="/ranking" class="btn-jogar">🏆 Ranking Global</a>
+            <a href="/profile" class="btn-jogar">👤 Meu Perfil</a>
+            
+            {% if session.user_id %}
+            <a href="/logout" class="btn-jogar" style="background: var(--red);">🚪 Sair</a>
+            {% endif %}
+        </div>
     </div>
-
-    <div class="menu-grid">
-
-        <a href="/trilhas" class="menu-card">
-            <h3>🗺️ Trilhas</h3>
-            <p>Continue aprendendo</p>
-        </a>
-
-        <a href="/ranking" class="menu-card">
-            <h3>🏆 Ranking</h3>
-            <p>Veja os melhores jogadores</p>
-        </a>
-
-        <a href="/profile" class="menu-card">
-            <h3>👤 Perfil</h3>
-            <p>Suas estatísticas</p>
-        </a>
-
-        {% if session.user_id %}
-        <a href="/logout" class="menu-card danger">
-            <h3>🚪 Sair</h3>
-            <p>Encerrar sessão</p>
-        </a>
-        {% endif %}
-
-    </div>
-
-</main>
 
 </body>
 </html>

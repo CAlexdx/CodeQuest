@@ -1,53 +1,108 @@
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>{{ trail.name }}</title>
-<link rel="stylesheet" href="/static/style.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ trail.name }} - CodeQuest</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <style>
+        .path-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin: 40px 0;
+        }
+        .path-node-wrapper {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            position: relative;
+        }
+        
+        /* Estilização para o efeito de zigue-zague */
+        .node-left { margin-right: 90px; }
+        .node-right { margin-left: 90px; }
+
+        .path-line {
+            width: 8px;
+            height: 50px;
+            background: #334155;
+            margin: 6px 0;
+            border-radius: 4px;
+        }
+        .path-line.completed { background: var(--blue); }
+        
+        /* Linhas inclinadas para conectar o zigue-zague */
+        .line-to-left { transform: rotate(25deg); }
+        .line-to-right { transform: rotate(-25deg); }
+
+        .path-node {
+            width: 75px;
+            height: 75px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            font-weight: 800;
+            text-decoration: none;
+            transition: transform 0.2s, box-shadow 0.2s;
+            box-shadow: 0 6px 0 #1e3a8a;
+            border: 4px solid transparent;
+        }
+        .path-node:hover {
+            transform: scale(1.08);
+            text-decoration: none;
+        }
+        
+        .node-completed { background: var(--blue); color: white; border-color: #60a5fa; box-shadow: 0 6px 0 #1d4ed8; }
+        .node-available { background: var(--accent); color: white; border-color: #7dd3fc; box-shadow: 0 6px 0 #0284c7; }
+        .node-locked { background: #334155; color: #94a3b8; cursor: not-allowed; box-shadow: 0 6px 0 #1e293b; }
+        .node-locked:hover { transform: none; }
+        
+        .unit-title {
+            margin-top: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-muted);
+            max-width: 140px;
+            text-align: center;
+        }
+    </style>
 </head>
 <body>
 
-<header>
-    <h1>{{ trail.icon }} {{ trail.name }}</h1>
-    <p>{{ trail.description }}</p>
+    <div class="quiz" style="max-width: 640px;">
+        <header>
+            <h1>{{ trail.icon }} {{ trail.name }}</h1>
+            <p style="margin-bottom: 12px;">{{ trail.description }}</p>
+            <a href="/trilhas">⬅ Voltar para Trilhas</a>
+        </header>
 
-    <a href="/trilhas">⬅ Voltar</a>
-</header>
+        <div class="path-container">
+            {% for unit in units %}
+                <div class="path-node-wrapper {% if loop.index % 3 == 1 %}node-left{% elif loop.index % 3 == 0 %}node-right{% endif %}">
+                    
+                    {% if unit.status == 'completed' %}
+                        <a href="/unidade/{{ unit.id }}" class="path-node node-completed">✔️</a>
+                    {% elif unit.status == 'available' %}
+                        <a href="/unidade/{{ unit.id }}" class="path-node node-available">{{ unit.order }}</a>
+                    {% else %}
+                        <div class="path-node node-locked">{{ unit.order }}</div>
+                    {% endif %}
+                    
+                    <div class="unit-title">{{ unit.title }}</div>
+                </div>
 
-<main class="mapa-trilha">
-
-{% for unit in units %}
-
-<div class="unit-wrapper">
-
-{% if unit.status == "completed" %}
-
-<a href="/unidade/{{ unit.id }}" class="unit-circle completed">
-    ✅
-</a>
-
-{% elif unit.status == "available" %}
-
-<a href="/unidade/{{ unit.id }}" class="unit-circle available">
-    ⭕
-</a>
-
-{% else %}
-
-<div class="unit-circle locked">
-    🔒
-</div>
-
-{% endif %}
-
-<h3>{{ unit.title }}</h3>
-
-</div>
-
-{% endfor %}
-
-</main>
+                {% if not loop.last %}
+                    <div class="path-line 
+                        {% if unit.status == 'completed' %}completed{% endif %}
+                        {% if loop.index % 3 == 1 %}line-to-right{% elif loop.index % 3 == 0 %}line-to-left{% endif %}">
+                    </div>
+                {% endif %}
+            {% endfor %}
+        </div>
+    </div>
 
 </body>
 </html>
