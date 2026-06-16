@@ -1,99 +1,58 @@
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CodeQuest - Desafio</title>
-    <link rel="stylesheet" href="/static/style.css">
-    <style>
-        .area-botoes {
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-            align-items: center;
-        }
-        #montagem {
-            min-height: 44px;
-            background: #0a1120;
-            border: 1px dashed #38bdf8;
-            border-radius: 8px;
-            margin: 12px auto;
-            padding: 10px 14px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            gap: 6px;
-            flex-wrap: wrap;
-            max-width: 420px;
-            font-size: 15px;
-        }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CodeQuest</title>
+<link rel="stylesheet" href="/static/style.css">
 </head>
 <body>
 
-    <header>
-        <h1>🚀 CodeQuest</h1>
-        <div class="status-bar">
-            <span class="status-item">👤 <span class="user-name">{{ username }}</span></span>
-            <span class="status-item">⭐ {{ xp }} / {{ xp_next }} XP</span>
-            <span class="status-item">🏅 Nível {{ level }}</span>
-        </div>
-        <nav>
-            <a href="/profile">Perfil</a>
-            <a href="/ranking">Ranking</a>
-            <a href="/logout" class="danger">Sair</a>
-        </nav>
-    </header>
+<header class="topbar">
+    <h1>🚀 CodeQuest</h1>
 
-    <main class="quiz">
-        {% if question %}
-            <h2>{{ question["question"] }}</h2>
+    <div class="status-bar">
+        <span>👤 {{ username }}</span>
+        <span>⭐ {{ xp }} XP</span>
+        <span>🏆 Nível {{ level }}</span>
+        <span>🔥 {{ streak }}</span>
+    </div>
+</header>
 
-            <div id="area-resposta">
+<main class="home-container">
 
-                {% if question["type"] == "multiple" %}
-                    <div class="area-botoes">
-                        {% for opt in question["options"] if opt %}
-                            <button onclick="responder('{{ opt }}')">{{ opt }}</button>
-                        {% endfor %}
-                    </div>
-                {% endif %}
+    <div class="welcome-card">
+        <h2>Bem-vindo de volta!</h2>
+        <p>Continue sua jornada nas trilhas de programação.</p>
+    </div>
 
-                {% if question["type"] in ["text", "cloze"] %}
-                    <input type="text" id="resposta"
-                           placeholder="{{ 'Complete o código' if question['type'] == 'cloze' else 'Digite sua resposta' }}"
-                           maxlength="100"
-                           autocomplete="off"
-                           autofocus>
-                    <button onclick="enviar()">Responder</button>
-                {% endif %}
+    <div class="menu-grid">
 
-                {% if question["type"] == "wordbank" %}
-                    <div id="wordbank">
-                        {% for opt in question["options"] if opt %}
-                            <button onclick="addWord('{{ opt }}')">{{ opt }}</button>
-                        {% endfor %}
-                    </div>
-                    <div id="montagem"></div>
-                    <button onclick="enviarMontagem()">Confirmar Resposta</button>
-                    <button onclick="limparMontagem()" style="background:#334155; margin-top:6px;">Limpar</button>
-                {% endif %}
+        <a href="/trilhas" class="menu-card">
+            <h3>🗺️ Trilhas</h3>
+            <p>Continue aprendendo</p>
+        </a>
 
-            </div>
+        <a href="/ranking" class="menu-card">
+            <h3>🏆 Ranking</h3>
+            <p>Veja os melhores jogadores</p>
+        </a>
 
-            <p id="resultado"></p>
+        <a href="/profile" class="menu-card">
+            <h3>👤 Perfil</h3>
+            <p>Suas estatísticas</p>
+        </a>
 
-        {% else %}
-            <p style="color:#94a3b8; padding: 20px 0;">
-                Você respondeu todas as perguntas disponíveis! Volte em breve. 🎉
-            </p>
+        {% if session.user_id %}
+        <a href="/logout" class="menu-card danger">
+            <h3>🚪 Sair</h3>
+            <p>Encerrar sessão</p>
+        </a>
         {% endif %}
-    </main>
 
-    <script>
-        const question_id = "{{ question['id'] if question else '' }}";
-    </script>
-    <script src="/static/script.js"></script>
+    </div>
+
+</main>
 
 </body>
 </html>

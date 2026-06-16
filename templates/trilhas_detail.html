@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>{{ trail.name }}</title>
+<link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+
+<header>
+    <h1>{{ trail.icon }} {{ trail.name }}</h1>
+    <p>{{ trail.description }}</p>
+
+    <a href="/trilhas">⬅ Voltar</a>
+</header>
+
+<main class="mapa-trilha">
+
+{% for unit in units %}
+
+<div class="unit-wrapper">
+
+{% if unit.status == "completed" %}
+
+<a href="/unidade/{{ unit.id }}" class="unit-circle completed">
+    ✅
+</a>
+
+{% elif unit.status == "available" %}
+
+<a href="/unidade/{{ unit.id }}" class="unit-circle available">
+    ⭕
+</a>
+
+{% else %}
+
+<div class="unit-circle locked">
+    🔒
+</div>
+
+{% endif %}
+
+<h3>{{ unit.title }}</h3>
+
+</div>
+
+{% endfor %}
+
+</main>
+
+</body>
+</html>

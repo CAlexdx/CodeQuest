@@ -1,35 +1,56 @@
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Perfil - CodeQuest</title>
-    <link rel="stylesheet" href="/static/style.css">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Perfil</title>
+<link rel="stylesheet" href="/static/style.css">
 </head>
 <body>
 
-    <div class="quiz">
-        <h1>Seu Perfil</h1>
+<div class="quiz">
 
-        <div class="perfil-info">
-            <p>👤 <strong>Usuário:</strong> <span class="user-highlight">{{ username }}</span></p>
-            <p>⭐ <strong>XP Total:</strong> {{ xp }}</p>
-            <p>🚀 <strong>Nível:</strong> {{ level }}</p>
-        </div>
+<h1>👤 Perfil</h1>
 
-        <div class="progress-container">
-            <div class="progress-bar" style="width: {{ [((xp % 50) / 50 * 100) | int, 100] | min }}%;"></div>
-        </div>
-        <p style="font-size: 13px; color: #94a3b8; margin-bottom: 8px;">
-            {{ xp % 50 }} / 50 XP para o nível {{ level + 1 }}
-        </p>
+<div class="perfil-info">
 
-        <div class="btn-container">
-            <a href="/" class="btn-jogar">Continuar Jogando</a>
-            <a href="/ranking" style="font-size: 14px;">Ver Ranking</a>
-            <a href="/logout" class="danger" style="font-size: 14px;">Sair da Conta</a>
-        </div>
-    </div>
+<p>👤 {{ username }}</p>
+
+<p>⭐ {{ xp }} XP</p>
+
+<p>🏆 Nível {{ level }}</p>
+
+<p>🔥 Streak: {{ streak }} dias</p>
+
+</div>
+
+<div class="progress-container">
+<div class="progress-bar"
+style="width: {{ ((xp % 50) / 50 * 100)|int }}%;">
+</div>
+</div>
+
+<p>
+{{ xp % 50 }}/50 XP para o próximo nível
+</p>
+
+<div class="btn-container">
+
+<a href="/trilhas" class="btn-jogar">
+🗺️ Trilhas
+</a>
+
+<a href="/ranking" class="btn-jogar">
+🏆 Ranking
+</a>
+
+<a href="/" class="btn-jogar">
+🏠 Home
+</a>
+
+</div>
+
+</div>
 
 </body>
 </html>

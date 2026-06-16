@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Trilhas - CodeQuest</title>
+<link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+
+<header>
+    <h1>🗺️ Trilhas de Aprendizagem</h1>
+    <a href="/">⬅ Voltar</a>
+</header>
+
+<main class="trails-container">
+
+{% for trail in trails %}
+<div class="trail-card">
+
+    <div class="trail-icon">
+        {{ trail.icon }}
+    </div>
+
+    <h2>{{ trail.name }}</h2>
+
+    <p>{{ trail.description }}</p>
+
+    <div class="progress-info">
+        {{ trail.completed_units }}/{{ trail.total_units }} unidades
+    </div>
+
+    <div class="progress-container">
+        <div class="progress-bar"
+             style="width: {{ (trail.completed_units / trail.total_units * 100)|int if trail.total_units else 0 }}%;">
+        </div>
+    </div>
+
+    <a href="/trilhas/{{ trail.id }}" class="btn-jogar">
+        Entrar
+    </a>
+
+</div>
+{% endfor %}
+
+</main>
+
+</body>
+</html>
