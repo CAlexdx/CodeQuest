@@ -1,148 +1,471 @@
-/* RESET */
-*{
-    margin:0;
-    padding:0;
-    box-sizing:border-box;
+/* ===========================
+   RESET & BASE
+=========================== */
+*, *::before, *::after {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
 }
 
-/* BODY */
-body{
-    font-family:Arial, sans-serif;
-    background:#0f172a;
-    color:white;
-    text-align:center;
-    padding:20px;
+:root {
+    --bg-base: #0f172a;
+    --bg-card: #1e293b;
+    --bg-deep: #0a1120;
+    --bg-input: #0f172a;
+    --border: #334155;
+    --border-focus: #38bdf8;
+    --text-primary: #f1f5f9;
+    --text-muted: #94a3b8;
+    --blue: #3b82f6;
+    --blue-hover: #2563eb;
+    --blue-dim: #1d3a6b;
+    --green: #22c55e;
+    --green-hover: #16a34a;
+    --red: #ef4444;
+    --orange: #f97316;
+    --accent: #38bdf8;
+    --radius-sm: 8px;
+    --radius-md: 12px;
+    --radius-lg: 16px;
 }
 
-/* TÍTULO */
-h1{
-    margin-bottom:20px;
+body {
+    font-family: 'Segoe UI', Arial, sans-serif;
+    background: var(--bg-base);
+    color: var(--text-primary);
+    text-align: center;
+    padding: 20px;
+    min-height: 100vh;
+    line-height: 1.6;
 }
 
-/* LINKS */
-a{
-    color:#38bdf8;
-    text-decoration:none;
-    margin:10px;
-    display:inline-block;
+/* ===========================
+   TIPOGRAFIA
+=========================== */
+h1 {
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 16px;
 }
 
-a:hover{
-    text-decoration:underline;
+h2 {
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--text-primary);
+    line-height: 1.5;
+    margin-bottom: 20px;
 }
 
-/* CARD PRINCIPAL */
-.quiz{
-    margin-top:40px;
-    background:#1e293b;
-    padding:20px;
-    border-radius:16px;
-    max-width:500px;
-    margin-left:auto;
-    margin-right:auto;
-    box-shadow:0 0 15px rgba(0,0,0,0.5);
+p { color: var(--text-muted); }
+
+a {
+    color: var(--accent);
+    text-decoration: none;
+    margin: 0 10px;
+    display: inline-block;
+    font-size: 14px;
+    font-weight: 500;
+    transition: color 0.2s;
 }
 
-/* INPUT */
-input{
-    padding:12px;
-    margin:10px;
-    width:90%;
-    max-width:300px;
-    border-radius:10px;
-    border:none;
-    outline:none;
-    font-size:16px;
+a:hover { color: #7dd3fc; text-decoration: underline; }
+
+/* ===========================
+   HEADER
+=========================== */
+header {
+    max-width: 540px;
+    margin: 0 auto 20px;
 }
 
-/* BOTÕES */
-button{
-    padding:12px;
-    width:90%;
-    max-width:300px;
-    border:none;
-    border-radius:12px;
-    background:#3b82f6;
-    color:white;
-    cursor:pointer;
-    font-size:16px;
-    transition:0.2s;
+header h1 {
+    font-size: 24px;
+    letter-spacing: -0.5px;
+    margin-bottom: 12px;
 }
 
-button:hover{
-    background:#2563eb;
+header nav {
+    margin-top: 12px;
+    display: flex;
+    justify-content: center;
+    gap: 4px;
+    flex-wrap: wrap;
 }
 
-button:disabled{
-    background:#555;
-    cursor:not-allowed;
+header nav a {
+    padding: 6px 14px;
+    border-radius: 99px;
+    background: #1e293b;
+    border: 1px solid var(--border);
+    font-size: 13px;
+    transition: background 0.2s, border-color 0.2s;
 }
 
-/* RESULTADO */
-#resultado{
-    margin-top:20px;
-    font-weight:bold;
-    font-size:18px;
+header nav a:hover {
+    background: #293548;
+    border-color: var(--accent);
+    text-decoration: none;
 }
 
-/* WORD BANK */
-#wordbank{
-    margin-top:10px;
+/* ===========================
+   STATUS BAR
+=========================== */
+.status-bar {
+    background: var(--bg-card);
+    padding: 12px 16px;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border);
+    margin-bottom: 20px;
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
 }
 
-#wordbank button{
-    width:auto;
-    margin:5px;
-    padding:8px 12px;
-    background:#22c55e;
+.status-item {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-muted);
 }
 
-#wordbank button:hover{
-    background:#16a34a;
+.user-name { color: var(--accent); }
+
+/* ===========================
+   CARD PRINCIPAL
+=========================== */
+.quiz {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    padding: 28px 24px;
+    border-radius: var(--radius-lg);
+    max-width: 520px;
+    margin: 0 auto;
 }
 
-#montagem{
-    margin:10px;
-    font-size:18px;
+/* ===========================
+   INPUTS
+=========================== */
+input[type="text"],
+input[type="password"],
+input:not([type]) {
+    display: block;
+    padding: 12px 16px;
+    margin: 10px auto;
+    width: 90%;
+    max-width: 320px;
+    background: var(--bg-input);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    color: var(--text-primary);
+    font-size: 15px;
+    outline: none;
+    transition: border-color 0.2s;
 }
 
-/* TABELA (ADMIN / RANKING) */
-table{
-    margin:auto;
-    border-collapse:collapse;
-    margin-top:20px;
-    width:90%;
-    max-width:600px;
-    background:#1e293b;
-    border-radius:10px;
-    overflow:hidden;
+input:focus {
+    border-color: var(--border-focus);
 }
 
-th{
-    background:#3b82f6;
+input::placeholder { color: var(--text-muted); }
+
+/* ===========================
+   BOTÕES
+=========================== */
+button {
+    display: block;
+    padding: 12px 20px;
+    width: 90%;
+    max-width: 320px;
+    margin: 8px auto;
+    border: none;
+    border-radius: var(--radius-md);
+    background: var(--blue);
+    color: #fff;
+    cursor: pointer;
+    font-size: 15px;
+    font-weight: 600;
+    letter-spacing: 0.2px;
+    transition: background 0.2s, transform 0.1s;
 }
 
-td,th{
-    padding:12px;
+button:hover { background: var(--blue-hover); }
+
+button:active { transform: scale(0.98); }
+
+button:disabled {
+    background: #2d3748;
+    color: var(--text-muted);
+    cursor: not-allowed;
+    transform: none;
+    opacity: 0.7;
 }
 
-/* RESPONSIVO */
-@media(max-width:600px){
+/* ===========================
+   BOTÕES DE MÚLTIPLA ESCOLHA
+=========================== */
+.area-botoes {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    align-items: center;
+}
 
-    h1{
-        font-size:22px;
+.area-botoes button {
+    background: var(--bg-deep);
+    border: 1px solid var(--border);
+    color: var(--text-primary);
+    text-align: left;
+    padding: 13px 18px;
+    transition: border-color 0.2s, background 0.2s;
+}
+
+.area-botoes button:hover:not(:disabled) {
+    border-color: var(--accent);
+    background: #13244a;
+    color: #fff;
+}
+
+/* ===========================
+   BOTÃO DE SUBMIT DE FORMULÁRIO
+=========================== */
+.quiz form button[type="submit"],
+.quiz > button[onclick] {
+    background: var(--blue);
+    border: none;
+    color: #fff;
+}
+
+/* ===========================
+   WORD BANK
+=========================== */
+#wordbank {
+    margin: 12px 0;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 8px;
+}
+
+#wordbank button {
+    width: auto;
+    padding: 8px 14px;
+    background: #14532d;
+    border: 1px solid #16a34a;
+    border-radius: var(--radius-sm);
+    color: #bbf7d0;
+    font-size: 14px;
+    font-weight: 500;
+    margin: 0;
+}
+
+#wordbank button:hover:not(:disabled) {
+    background: #166534;
+    border-color: var(--green);
+}
+
+#montagem {
+    min-height: 44px;
+    background: var(--bg-deep);
+    border: 1px dashed var(--accent);
+    border-radius: var(--radius-sm);
+    margin: 12px auto;
+    padding: 10px 14px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 6px;
+    font-size: 15px;
+    color: var(--text-primary);
+    max-width: 420px;
+}
+
+/* ===========================
+   RESULTADO
+=========================== */
+#resultado {
+    margin-top: 20px;
+    font-weight: 700;
+    font-size: 17px;
+    min-height: 28px;
+    letter-spacing: 0.2px;
+}
+
+/* ===========================
+   BARRA DE PROGRESSO
+=========================== */
+.progress-container {
+    background: #1a2540;
+    border-radius: 99px;
+    width: 100%;
+    height: 10px;
+    margin: 14px 0 6px;
+    overflow: hidden;
+}
+
+.progress-bar {
+    background: var(--blue);
+    height: 100%;
+    border-radius: 99px;
+    transition: width 0.6s ease;
+}
+
+/* ===========================
+   PERFIL
+=========================== */
+.perfil-info {
+    text-align: left;
+    margin: 16px 0;
+    padding: 16px;
+    background: var(--bg-deep);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+}
+
+.perfil-info p {
+    margin: 8px 0;
+    font-size: 16px;
+    color: var(--text-primary);
+}
+
+.user-highlight { color: var(--accent); font-weight: 700; }
+
+.btn-container {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 20px;
+}
+
+.btn-jogar {
+    display: block;
+    background: var(--blue);
+    color: #fff !important;
+    padding: 13px;
+    border-radius: var(--radius-md);
+    font-weight: 700;
+    font-size: 15px;
+    transition: background 0.2s, transform 0.1s;
+}
+
+.btn-jogar:hover {
+    background: var(--blue-hover);
+    text-decoration: none;
+    transform: scale(1.01);
+}
+
+/* ===========================
+   TABELA (ADMIN / RANKING)
+=========================== */
+table {
+    margin: 20px auto 0;
+    border-collapse: collapse;
+    width: 95%;
+    max-width: 640px;
+    background: var(--bg-card);
+    border-radius: var(--radius-md);
+    overflow: hidden;
+    border: 1px solid var(--border);
+}
+
+th {
+    background: #1d3a6b;
+    color: #90cdf4;
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    padding: 12px 14px;
+}
+
+td {
+    padding: 11px 14px;
+    font-size: 14px;
+    border-top: 1px solid var(--border);
+    color: var(--text-primary);
+}
+
+tr:hover td { background: #182236; }
+
+/* ===========================
+   FORMS INLINE (ADMIN)
+=========================== */
+.admin-form {
+    display: inline-flex;
+    gap: 6px;
+    align-items: center;
+}
+
+.admin-form input {
+    width: 70px;
+    padding: 6px 10px;
+    margin: 0;
+    font-size: 13px;
+    border-radius: var(--radius-sm);
+}
+
+.admin-form button {
+    width: auto;
+    padding: 6px 14px;
+    font-size: 13px;
+    margin: 0;
+    border-radius: var(--radius-sm);
+}
+
+/* ===========================
+   BADGES / TAGS
+=========================== */
+.badge {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 99px;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.badge-admin { background: #312e81; color: #a5b4fc; }
+.badge-user  { background: #1e293b; color: var(--text-muted); }
+
+/* ===========================
+   LINKS DANGER
+=========================== */
+a.danger { color: var(--red); }
+a.danger:hover { color: #fca5a5; }
+
+/* ===========================
+   MENSAGEM DE ERRO
+=========================== */
+.error-msg {
+    color: var(--red);
+    font-size: 14px;
+    font-weight: 600;
+    margin-top: 14px;
+}
+
+/* ===========================
+   RESPONSIVO
+=========================== */
+@media (max-width: 600px) {
+    body { padding: 12px; }
+
+    h1 { font-size: 22px; }
+
+    .quiz { padding: 20px 16px; }
+
+    button {
+        width: 100%;
+        max-width: none;
     }
 
-    .quiz{
-        padding:15px;
+    input {
+        width: 100%;
+        max-width: none;
     }
 
-    button{
-        width:100%;
-    }
+    table { font-size: 13px; }
 
-    input{
-        width:100%;
-    }
+    th, td { padding: 9px 10px; }
 
+    header nav a { padding: 5px 10px; }
 }

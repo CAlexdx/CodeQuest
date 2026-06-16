@@ -5,16 +5,16 @@ from flask import Flask, render_template, request, redirect, session, jsonify
 from werkzeug.security import generate_password_hash, check_password_hash
 
 app = Flask(__name__)
-from init_db import init_db
+app.secret_key = os.environ.get("SECRET_KEY", "segredo_super_codequest")
 
+from init_db import init_db
 try:
     init_db()
 except Exception as e:
-    print(e)
-app.secret_key = os.environ.get("SECRET_KEY", "segredo_super_codequest")
+    print(f"[init_db] {e}")
 
 # ==========================
-# CONFIGURAÇÃO DO BANCO (HÍBRIDO)
+# BANCO DE DADOS
 # ==========================
 
 def get_db():
@@ -22,43 +22,61 @@ def get_db():
     if db_url:
         import psycopg2
         return psycopg2.connect(db_url)
-    else:
-        return sqlite3.connect("database.db")
+    return sqlite3.connect("database.db")
 
-def get_placeholder():
-    """Retorna %s para Postgres (Render) ou ? para SQLite (Local)"""
+def ph():
+    """Placeholder: %s para Postgres, ? para SQLite."""
     return "%s" if os.environ.get("DATABASE_URL") else "?"
 
 # ==========================
-# FUNÇÕES DE APOIO E GAMIFICAÇÃO
+# HELPERS
 # ==========================
 
 def get_level(xp):
     return xp // 50
 
 def get_difficulty(level):
-    if level < 2: return 1
-    elif level < 4: return 2
-    else: return 3
+    if level < 2:
+        return 1
+    elif level < 4:
+        return 2
+    return 3
 
 def normalize(text):
-    """Remove acentos e padroniza para comparação"""
+    """Remove acentos e coloca em minúsculas para comparação flexível."""
     return ''.join(
         c for c in unicodedata.normalize('NFD', text.lower().strip())
         if unicodedata.category(c) != 'Mn'
     )
 
-def is_admin():
-    """Verifica se o usuário logado tem permissão de admin"""
+def get_current_user():
+    """Retorna (id, username, xp, is_admin) do usuário logado ou None."""
     if "user_id" not in session:
-        return False
+        return None
     conn = get_db()
     cursor = conn.cursor()
-    p = get_placeholder()
-    cursor.execute(f"SELECT is_admin FROM users WHERE id={p}", (session["user_id"],))
+    cursor.execute(
+        f"SELECT id, username, xp, is_admin FROM users WHERE id={ph()}",
+        (session["user_id"],)
+    )
     row = cursor.fetchone()
     conn.close()
-    return bool(row and row[0])
+    return row
+
+def is_admin():
+    user = get_current_user()
+    return bool(user and user[3])
+
+def require_login():
+    """Retorna redirect se não estiver logado, None se estiver."""
+    if "user_id" not in session:
+        return redirect("/login")
+    return None
+
+def require_admin():
+    if not is_admin():
+        return redirect("/")
+    return None
 
 # ==========================
 # ROTA PRINCIPAL (GAMEPLAY)
@@ -66,95 +84,140 @@ def is_admin():
 
 @app.route("/")
 def home():
-    if "user_id" not in session:
-        return redirect("/login")
-    
+    redir = require_login()
+    if redir:
+        return redir
+
     conn = get_db()
     cursor = conn.cursor()
-    p = get_placeholder()
-    
-    cursor.execute(f"SELECT username, xp FROM users WHERE id={p}", (session["user_id"],))
+    p = ph()
+
+    cursor.execute(
+        f"SELECT username, xp FROM users WHERE id={p}",
+        (session["user_id"],)
+    )
     user = cursor.fetchone()
-    
+
     if not user:
+        conn.close()
         return redirect("/logout")
 
     level = get_level(user[1])
     difficulty = get_difficulty(level)
 
-    # Busca pergunta baseada na dificuldade que o usuário ainda não respondeu
+    # Busca pergunta não respondida adequada ao nível atual
     cursor.execute(f"""
-        SELECT * FROM questions 
-        WHERE difficulty <= {p} 
-        AND id NOT IN (SELECT question_id FROM answered WHERE user_id={p})
+        SELECT * FROM questions
+        WHERE difficulty <= {p}
+        AND id NOT IN (
+            SELECT question_id FROM answered WHERE user_id={p}
+        )
         ORDER BY RANDOM() LIMIT 1
     """, (difficulty, session["user_id"]))
-    
+
     q = cursor.fetchone()
 
-    # Se zerar as perguntas daquele nível, limpa o histórico para ele poder repetir
+    # Se respondeu tudo, reseta o histórico e reinicia
     if not q:
-        cursor.execute(f"DELETE FROM answered WHERE user_id={p}", (session["user_id"],))
+        cursor.execute(
+            f"DELETE FROM answered WHERE user_id={p}",
+            (session["user_id"],)
+        )
         conn.commit()
-        cursor.execute(f"SELECT * FROM questions WHERE difficulty <= {p} ORDER BY RANDOM() LIMIT 1", (difficulty,))
+        cursor.execute(
+            f"SELECT * FROM questions WHERE difficulty <= {p} ORDER BY RANDOM() LIMIT 1",
+            (difficulty,)
+        )
         q = cursor.fetchone()
 
     conn.close()
-    
-    return render_template("index.html", 
-                           username=user[0], 
-                           xp=user[1], 
-                           xp_next=(level+1)*50, 
-                           level=level, 
-                           question={
-                               "id": q[0], "question": q[1], "type": q[4],
-                               "options": [q[5], q[6], q[7], q[8]]
-                           } if q else None)
+
+    question_data = None
+    if q:
+        question_data = {
+            "id": q[0],
+            "question": q[1],
+            "type": q[4],
+            "options": [q[5], q[6], q[7], q[8]],
+        }
+
+    return render_template(
+        "index.html",
+        username=user[0],
+        xp=user[1],
+        xp_next=(level + 1) * 50,
+        level=level,
+        question=question_data,
+    )
 
 # ==========================
-# SISTEMA DE LOGIN E REGISTRO
+# LOGIN / REGISTRO / LOGOUT
 # ==========================
 
 @app.route("/register", methods=["GET", "POST"])
 def register():
+    if "user_id" in session:
+        return redirect("/")
+
     error = None
     if request.method == "POST":
-        username = request.form["username"].strip()
-        password = request.form["password"].strip()
-        
-        conn = get_db()
-        cursor = conn.cursor()
-        p = get_placeholder()
-        try:
-            cursor.execute(f"INSERT INTO users (username, password) VALUES ({p}, {p})",
-                           (username, generate_password_hash(password)))
-            conn.commit()
-            return redirect("/login")
-        except:
-            error = "Este usuário já existe!"
-        finally:
-            conn.close()
+        username = request.form.get("username", "").strip()
+        password = request.form.get("password", "").strip()
+
+        if not username or not password:
+            error = "Preencha todos os campos."
+        elif len(username) > 15:
+            error = "Nome de usuário muito longo (máx. 15 caracteres)."
+        elif len(password) < 4:
+            error = "Senha muito curta (mín. 4 caracteres)."
+        else:
+            conn = get_db()
+            cursor = conn.cursor()
+            p = ph()
+            try:
+                cursor.execute(
+                    f"INSERT INTO users (username, password) VALUES ({p}, {p})",
+                    (username, generate_password_hash(password))
+                )
+                conn.commit()
+                return redirect("/login")
+            except Exception:
+                error = "Este usuário já existe!"
+            finally:
+                conn.close()
+
     return render_template("register.html", error=error)
+
 
 @app.route("/login", methods=["GET", "POST"])
 def login():
+    if "user_id" in session:
+        return redirect("/")
+
     error = None
     if request.method == "POST":
-        username = request.form["username"].strip()
-        password = request.form["password"].strip()
-        
-        conn = get_db()
-        cursor = conn.cursor()
-        p = get_placeholder()
-        cursor.execute(f"SELECT id, password FROM users WHERE username={p}", (username,))
-        user = cursor.fetchone()
-        conn.close()
+        username = request.form.get("username", "").strip()
+        password = request.form.get("password", "").strip()
 
-        if user and check_password_hash(user[1], password):
-            session["user_id"] = user[0]
-            return redirect("/")
-        error = "Usuário ou senha incorretos."
+        if not username or not password:
+            error = "Preencha todos os campos."
+        else:
+            conn = get_db()
+            cursor = conn.cursor()
+            cursor.execute(
+                f"SELECT id, password FROM users WHERE username={ph()}",
+                (username,)
+            )
+            user = cursor.fetchone()
+            conn.close()
+
+            if user and check_password_hash(user[1], password):
+                session["user_id"] = user[0]
+                return redirect("/")
+            error = "Usuário ou senha incorretos."
+
     return render_template("login.html", error=error)
+
 
 @app.route("/logout")
 def logout():
@@ -162,125 +225,155 @@ def logout():
     return redirect("/login")
 
 # ==========================
-# LÓGICA DE RESPOSTAS (API)
+# RESPOSTA (API)
 # ==========================
 
 @app.route("/answer", methods=["POST"])
 def answer():
-    if "user_id" not in session:
+    redir = require_login()
+    if redir:
         return jsonify({"error": "Acesso negado"}), 403
-    
-    data = request.get_json()
+
+    data = request.get_json(silent=True)
+    if not data or "id" not in data or "answer" not in data:
+        return jsonify({"error": "Dados inválidos"}), 400
+
+    question_id = data["id"]
+    user_answer = str(data["answer"]).strip()
+
     conn = get_db()
     cursor = conn.cursor()
-    p = get_placeholder()
+    p = ph()
 
-    # Validação anti-spam (não pontuar duas vezes a mesma pergunta)
-    cursor.execute(f"SELECT 1 FROM answered WHERE user_id={p} AND question_id={p}", 
-                   (session["user_id"], data["id"]))
+    # Anti-spam: não pontuar duas vezes a mesma pergunta
+    cursor.execute(
+        f"SELECT 1 FROM answered WHERE user_id={p} AND question_id={p}",
+        (session["user_id"], question_id)
+    )
     if cursor.fetchone():
+        conn.close()
         return jsonify({"result": "already_answered"})
 
-    cursor.execute(f"SELECT answer FROM questions WHERE id={p}", (data["id"],))
-    correct = cursor.fetchone()[0]
+    cursor.execute(
+        f"SELECT answer FROM questions WHERE id={p}",
+        (question_id,)
+    )
+    row = cursor.fetchone()
 
-    if normalize(data["answer"]) == normalize(correct):
-        cursor.execute(f"UPDATE users SET xp = xp + 10 WHERE id={p}", (session["user_id"],))
-        result = "correct"
-    else:
-        result = "wrong"
+    if not row:
+        conn.close()
+        return jsonify({"error": "Pergunta não encontrada"}), 404
 
-    cursor.execute(f"INSERT INTO answered (user_id, question_id) VALUES ({p}, {p})",
-                   (session["user_id"], data["id"]))
+    correct = row[0]
+    result = "correct" if normalize(user_answer) == normalize(correct) else "wrong"
+
+    if result == "correct":
+        cursor.execute(
+            f"UPDATE users SET xp = xp + 10 WHERE id={p}",
+            (session["user_id"],)
+        )
+
+    cursor.execute(
+        f"INSERT INTO answered (user_id, question_id) VALUES ({p}, {p})",
+        (session["user_id"], question_id)
+    )
     conn.commit()
     conn.close()
+
     return jsonify({"result": result, "correct_answer": correct})
 
 # ==========================
-# PAINEL ADMINISTRATIVO
+# PAINEL ADMIN
 # ==========================
 
 @app.route("/admin")
 def admin():
-    if not is_admin():
-        return redirect("/") # Bloqueia quem não é admin
-    
+    redir = require_admin()
+    if redir:
+        return redir
+
     conn = get_db()
     cursor = conn.cursor()
-    # Pega todos os usuários para a tabela de gestão
     cursor.execute("SELECT id, username, xp, is_admin FROM users ORDER BY id ASC")
     users = cursor.fetchall()
-    
-    # Pega as questões para conferência
     cursor.execute("SELECT id, question, difficulty FROM questions ORDER BY id DESC")
     questions = cursor.fetchall()
     conn.close()
+
     return render_template("admin.html", users=users, questions=questions)
+
 
 @app.route("/admin/set_xp", methods=["POST"])
 def set_xp():
-    if not is_admin(): return "Acesso negado", 403
-    
+    redir = require_admin()
+    if redir:
+        return "Acesso negado", 403
+
     user_id = request.form.get("user_id")
     xp = request.form.get("xp")
-    
+
+    try:
+        xp = int(xp)
+        if xp < 0:
+            xp = 0
+    except (TypeError, ValueError):
+        return "XP inválido", 400
+
     conn = get_db()
     cursor = conn.cursor()
-    p = get_placeholder()
-    
+    p = ph()
     cursor.execute(f"UPDATE users SET xp={p} WHERE id={p}", (xp, user_id))
     conn.commit()
     conn.close()
     return redirect("/admin")
 
+
 @app.route("/admin/toggle_admin/<int:user_id>")
 def toggle_admin(user_id):
-    """ Rota para promover ou rebaixar um usuário """
-    if not is_admin(): return "Acesso negado", 403
-    
-    # Segurança: Impede que o admin logado remova seu próprio cargo
+    redir = require_admin()
+    if redir:
+        return "Acesso negado", 403
+
     if user_id == session.get("user_id"):
-        return "Erro: Você não pode remover seu próprio acesso administrativo.", 400
+        return "Erro: você não pode remover seu próprio acesso.", 400
 
     conn = get_db()
     cursor = conn.cursor()
-    p = get_placeholder()
-
-    # Busca o status atual
+    p = ph()
     cursor.execute(f"SELECT is_admin FROM users WHERE id={p}", (user_id,))
-    user = cursor.fetchone()
-    
-    if user:
-        # Inverte o status: se era True (1) vira False (0) e vice-versa
-        novo_status = not bool(user[0])
-        cursor.execute(f"UPDATE users SET is_admin={p} WHERE id={p}", (novo_status, user_id))
+    row = cursor.fetchone()
+
+    if row:
+        cursor.execute(
+            f"UPDATE users SET is_admin={p} WHERE id={p}",
+            (not bool(row[0]), user_id)
+        )
         conn.commit()
-    
+
     conn.close()
     return redirect("/admin")
+
 
 @app.route("/admin/delete_user/<int:user_id>")
 def delete_user(user_id):
-    if not is_admin(): return "Acesso negado", 403
-    
-    # Segurança: Impede que o admin logado se delete
+    redir = require_admin()
+    if redir:
+        return "Acesso negado", 403
+
     if user_id == session.get("user_id"):
-        return "Erro: Você não pode deletar sua própria conta enquanto está logado.", 400
-        
+        return "Erro: você não pode deletar sua própria conta.", 400
+
     conn = get_db()
     cursor = conn.cursor()
-    p = get_placeholder()
-    
-    # Limpa o histórico de respostas do usuário primeiro (integridade do banco)
+    p = ph()
     cursor.execute(f"DELETE FROM answered WHERE user_id={p}", (user_id,))
-    # Deleta o usuário
     cursor.execute(f"DELETE FROM users WHERE id={p}", (user_id,))
-    
     conn.commit()
     conn.close()
     return redirect("/admin")
+
 # ==========================
-# SOCIAL E PERFIL
+# RANKING E PERFIL
 # ==========================
 
 @app.route("/ranking")
@@ -293,22 +386,35 @@ def ranking():
     users = [{"username": r[0], "xp": r[1]} for r in rows]
     return render_template("ranking.html", users=users)
 
+
 @app.route("/profile")
 def profile():
-    if "user_id" not in session: return redirect("/login")
+    redir = require_login()
+    if redir:
+        return redir
+
     conn = get_db()
     cursor = conn.cursor()
-    p = get_placeholder()
-    cursor.execute(f"SELECT username, xp FROM users WHERE id={p}", (session["user_id"],))
+    cursor.execute(
+        f"SELECT username, xp FROM users WHERE id={ph()}",
+        (session["user_id"],)
+    )
     user = cursor.fetchone()
     conn.close()
-    return render_template("profile.html", username=user[0], xp=user[1], level=get_level(user[1]))
+
+    if not user:
+        return redirect("/logout")
+
+    return render_template(
+        "profile.html",
+        username=user[0],
+        xp=user[1],
+        level=get_level(user[1])
+    )
 
 # ==========================
 # INICIALIZAÇÃO
 # ==========================
 
 if __name__ == "__main__":
-    from init_db import init_db
-    init_db() # Garante que o banco está pronto
     app.run(debug=True)

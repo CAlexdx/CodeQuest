@@ -8,31 +8,37 @@
 </head>
 <body>
 
-    <div class="quiz"> <h1>Criar Conta</h1>
+    <div class="quiz">
+        <h1>🚀 CodeQuest</h1>
+        <p style="margin-bottom: 24px; font-size: 14px;">Crie sua conta gratuita</p>
 
         <form method="POST">
-            <input name="username" 
-                   type="text" 
-                   placeholder="Escolha um Usuário (máx 15)" 
-                   maxlength="15" 
-                   required 
-                   pattern="[a-zA-Z0-9]+" 
-                   title="Use apenas letras e números, sem espaços ou símbolos.">
+            <input name="username"
+                   type="text"
+                   placeholder="Usuário (máx. 15 caracteres)"
+                   maxlength="15"
+                   required
+                   pattern="[a-zA-Z0-9]+"
+                   title="Apenas letras e números, sem espaços."
+                   autocomplete="username"
+                   autofocus>
 
-            <input name="password" 
-                   type="password" 
-                   placeholder="Crie uma Senha (máx 20)" 
-                   maxlength="20" 
-                   required>
+            <input name="password"
+                   type="password"
+                   placeholder="Senha (mín. 4 caracteres)"
+                   maxlength="20"
+                   minlength="4"
+                   required
+                   autocomplete="new-password">
 
-            <button type="submit">Cadastrar Agora</button>
+            <button type="submit">Criar Conta</button>
         </form>
 
         {% if error %}
-            <p style="color: #ef4444; margin-top: 15px; font-weight: bold;">{{error}}</p>
+            <p class="error-msg">{{ error }}</p>
         {% endif %}
 
-        <p style="margin-top: 20px;">
+        <p style="margin-top: 24px; font-size: 14px;">
             <a href="/login">Já tem uma conta? Entrar</a>
         </p>
     </div>

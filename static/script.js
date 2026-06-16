@@ -1,88 +1,154 @@
-let enviando = false // trava anti-spam
+// ===========================
+// ESTADO GLOBAL
+// ===========================
+let enviando = false;
+let frase = [];
 
-function enviar(){
-    let resposta = document.getElementById("resposta").value.trim()
-
-    if(!resposta) return
-
-    enviarResposta(resposta)
+// ===========================
+// RESPOSTA DE TEXTO
+// ===========================
+function enviar() {
+    const input = document.getElementById("resposta");
+    const resposta = input ? input.value.trim() : "";
+    if (!resposta) return;
+    enviarResposta(resposta);
 }
 
-function responder(opcao){
-    enviarResposta(opcao)
+// ===========================
+// RESPOSTA DE MÚLTIPLA ESCOLHA
+// ===========================
+function responder(opcao) {
+    enviarResposta(opcao);
 }
 
-function enviarResposta(resposta){
+// ===========================
+// ENVIO PARA O SERVIDOR
+// ===========================
+function enviarResposta(resposta) {
+    if (enviando) return;
+    if (!question_id) return;
 
-    if(enviando) return // 🔥 trava spam
-    enviando = true
+    enviando = true;
+    desativarBotoes();
 
-    desativarBotoes()
-
-    fetch("/answer",{
-        method:"POST",
-        headers:{
-            "Content-Type":"application/json"
-        },
-        body:JSON.stringify({
-            id:question_id,
-            answer:resposta
-        })
+    fetch("/answer", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: question_id, answer: resposta })
     })
-
-    .then(res=>res.json())
-
-    .then(data=>{
-
-        let resultado = document.getElementById("resultado")
-
-        if(data.result=="correct"){
-            resultado.innerText="Correto! +10 XP"
-            resultado.style.color="lime"
-        }
-        else if(data.result=="already_answered"){
-            resultado.innerText="Você já respondeu essa questão"
-            resultado.style.color="orange"
-        }
-        else{
-            resultado.innerText="Errado! Resposta: " + data.correct_answer
-            resultado.style.color="red"
-        }
-
-        setTimeout(()=>{
-            location.reload()
-        },1500)
-
+    .then(res => {
+        if (!res.ok) throw new Error("Erro de rede");
+        return res.json();
     })
-
+    .then(data => mostrarResultado(data))
+    .catch(() => {
+        mostrarMensagem("Erro de conexão. Tente novamente.", "#f97316");
+        enviando = false;
+        reativarBotoes();
+    });
 }
 
-// 🔥 desativa tudo após clicar
-function desativarBotoes(){
-    let botoes = document.querySelectorAll("button")
-    botoes.forEach(btn=>{
-        btn.disabled = true
-        btn.style.opacity = "0.6"
-    })
+// ===========================
+// EXIBIÇÃO DO RESULTADO
+// ===========================
+function mostrarResultado(data) {
+    const el = document.getElementById("resultado");
+    if (!el) return;
+
+    if (data.result === "correct") {
+        mostrarMensagem("✓ Correto! +10 XP", "#22c55e");
+    } else if (data.result === "already_answered") {
+        mostrarMensagem("Você já respondeu essa questão.", "#f97316");
+    } else {
+        mostrarMensagem("✗ Errado! Resposta: " + data.correct_answer, "#ef4444");
+    }
+
+    setTimeout(() => location.reload(), 1600);
 }
 
-// ==========================
+function mostrarMensagem(texto, cor) {
+    const el = document.getElementById("resultado");
+    if (!el) return;
+    el.textContent = texto;
+    el.style.color = cor;
+}
+
+// ===========================
+// CONTROLE DE BOTÕES
+// ===========================
+function desativarBotoes() {
+    document.querySelectorAll("button").forEach(btn => {
+        btn.disabled = true;
+    });
+    const input = document.getElementById("resposta");
+    if (input) input.disabled = true;
+}
+
+function reativarBotoes() {
+    document.querySelectorAll("button").forEach(btn => {
+        btn.disabled = false;
+    });
+    const input = document.getElementById("resposta");
+    if (input) input.disabled = false;
+}
+
+// ===========================
+// ENTER NO INPUT DE TEXTO
+// ===========================
+document.addEventListener("DOMContentLoaded", () => {
+    const input = document.getElementById("resposta");
+    if (input) {
+        input.addEventListener("keydown", e => {
+            if (e.key === "Enter") enviar();
+        });
+    }
+});
+
+// ===========================
 // WORD BANK
-// ==========================
-
-let frase = []
-
-function addWord(palavra){
-    if(enviando) return
-
-    frase.push(palavra)
-    document.getElementById("montagem").innerText = frase.join(" ")
+// ===========================
+function addWord(palavra) {
+    if (enviando) return;
+    frase.push(palavra);
+    atualizarMontagem();
 }
 
-function enviarMontagem(){
-    let resposta = frase.join(" ")
-    if(!resposta) return
+function atualizarMontagem() {
+    const el = document.getElementById("montagem");
+    if (!el) return;
 
-    enviarResposta(resposta)
-    frase = []
+    el.innerHTML = "";
+    frase.forEach((palavra, i) => {
+        const span = document.createElement("span");
+        span.textContent = palavra;
+        span.style.cssText = `
+            background: #1d4ed8;
+            color: #dbeafe;
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 14px;
+            cursor: pointer;
+        `;
+        span.title = "Clique para remover";
+        span.onclick = () => removerPalavra(i);
+        el.appendChild(span);
+    });
+}
+
+function removerPalavra(index) {
+    if (enviando) return;
+    frase.splice(index, 1);
+    atualizarMontagem();
+}
+
+function enviarMontagem() {
+    const resposta = frase.join(" ").trim();
+    if (!resposta) return;
+    enviarResposta(resposta);
+    frase = [];
+}
+
+function limparMontagem() {
+    frase = [];
+    atualizarMontagem();
 }

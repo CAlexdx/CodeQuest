@@ -8,30 +8,34 @@
 </head>
 <body>
 
-    <div class="quiz"> <h1>Login</h1>
+    <div class="quiz">
+        <h1>🚀 CodeQuest</h1>
+        <p style="margin-bottom: 24px; font-size: 14px;">Entre na sua conta para continuar</p>
 
         <form method="POST">
-            <input name="username" 
-                   placeholder="Usuário" 
-                   maxlength="15" 
-                   required 
-                   autocomplete="username">
+            <input name="username"
+                   type="text"
+                   placeholder="Usuário"
+                   maxlength="15"
+                   required
+                   autocomplete="username"
+                   autofocus>
 
-            <input type="password" 
-                   name="password" 
-                   placeholder="Senha" 
-                   maxlength="20" 
-                   required 
+            <input name="password"
+                   type="password"
+                   placeholder="Senha"
+                   maxlength="20"
+                   required
                    autocomplete="current-password">
 
             <button type="submit">Entrar</button>
         </form>
 
         {% if error %}
-            <p style="color: #ef4444; margin-top: 15px; font-weight: bold;">{{error}}</p>
+            <p class="error-msg">{{ error }}</p>
         {% endif %}
 
-        <p style="margin-top: 20px;">
+        <p style="margin-top: 24px; font-size: 14px;">
             <a href="/register">Ainda não tem conta? Criar conta</a>
         </p>
     </div>

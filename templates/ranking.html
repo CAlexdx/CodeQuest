@@ -6,30 +6,22 @@
     <title>Ranking - CodeQuest</title>
     <link rel="stylesheet" href="/static/style.css">
     <style>
-        /* Ajuste para garantir que a tabela não transborde no mobile */
         .ranking-container {
             overflow-x: auto;
-            width: 100%;
-            max-width: 600px;
+            max-width: 560px;
             margin: 0 auto;
         }
-        /* Destaque para os 3 primeiros */
-        tr:nth-child(2) td:first-child { color: #ffd700; font-weight: bold; } /* Ouro */
-        tr:nth-child(3) td:first-child { color: #c0c0c0; font-weight: bold; } /* Prata */
-        tr:nth-child(4) td:first-child { color: #cd7f32; font-weight: bold; } /* Bronze */
-        
-        /* Evita que nomes muito longos quebrem a linha */
-        td {
-            max-width: 150px;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
+        .medal { font-size: 18px; }
+        td { max-width: 160px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .pos-1 { color: #ffd700; font-weight: 700; }
+        .pos-2 { color: #c0c0c0; font-weight: 700; }
+        .pos-3 { color: #cd7f32; font-weight: 700; }
     </style>
 </head>
 <body>
 
     <h1>🏆 Ranking Global</h1>
+    <p style="margin-bottom: 20px; font-size: 14px;">Top 10 jogadores por XP</p>
 
     <div class="ranking-container">
         <table>
@@ -38,23 +30,31 @@
                     <th>#</th>
                     <th>Usuário</th>
                     <th>XP</th>
+                    <th>Nível</th>
                 </tr>
             </thead>
             <tbody>
                 {% for user in users %}
                 <tr>
-                    <td>{{ loop.index }}º</td>
+                    <td class="{{ 'pos-1' if loop.index == 1 else 'pos-2' if loop.index == 2 else 'pos-3' if loop.index == 3 else '' }}">
+                        {% if loop.index == 1 %}🥇
+                        {% elif loop.index == 2 %}🥈
+                        {% elif loop.index == 3 %}🥉
+                        {% else %}{{ loop.index }}º
+                        {% endif %}
+                    </td>
                     <td title="{{ user.username }}">{{ user.username }}</td>
                     <td>{{ user.xp }}</td>
+                    <td>{{ (user.xp // 50) }}</td>
                 </tr>
                 {% endfor %}
             </tbody>
         </table>
     </div>
 
-    <div style="margin-top: 30px;">
-        <a href="/" class="btn-voltar" style="background: #3b82f6; color: white; padding: 12px 25px; border-radius: 12px; text-decoration: none;">
-            Voltar ao Início
+    <div style="margin-top: 28px;">
+        <a href="/" class="btn-jogar" style="display:inline-block; background:#3b82f6; color:#fff; padding:12px 28px; border-radius:12px; font-weight:700;">
+            Voltar ao Jogo
         </a>
     </div>
 
