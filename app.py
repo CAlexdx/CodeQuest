@@ -84,9 +84,7 @@ def require_admin():
 # ==========================
 
 def update_streak(user_id):
-    """Atualiza o streak do usuário com base na data da última atividade.
-    +1 se a última atividade foi ontem, mantém se já é hoje, zera (e reinicia em 1)
-    se passou mais de um dia."""
+    """Atualiza o streak do usuário com base na data da última atividade."""
     conn = get_db()
     cursor = conn.cursor()
     p = ph()
@@ -105,7 +103,6 @@ def update_streak(user_id):
     today_str = today.isoformat()
 
     if last_active == today_str:
-        # já contabilizado hoje, nada a fazer
         conn.close()
         return
 
@@ -156,9 +153,9 @@ def home():
     level = get_level(user[1])
     difficulty = get_difficulty(level)
 
-    # Busca pergunta não respondida adequada ao nível atual (sem restrição de trilha)
+    # CORREÇÃO: Buscando colunas explicitamente para evitar desalinhamento do SELECT *
     cursor.execute(f"""
-        SELECT * FROM questions
+        SELECT id, question, answer, difficulty, type, opt1, opt2, opt3, opt4 FROM questions
         WHERE difficulty <= {p}
         AND id NOT IN (
             SELECT question_id FROM answered WHERE user_id={p}
@@ -168,7 +165,6 @@ def home():
 
     q = cursor.fetchone()
 
-    # Se respondeu tudo, reseta o histórico e reinicia
     if not q:
         cursor.execute(
             f"DELETE FROM answered WHERE user_id={p}",
@@ -176,7 +172,7 @@ def home():
         )
         conn.commit()
         cursor.execute(
-            f"SELECT * FROM questions WHERE difficulty <= {p} ORDER BY RANDOM() LIMIT 1",
+            f"SELECT id, question, answer, difficulty, type, opt1, opt2, opt3, opt4 FROM questions WHERE difficulty <= {p} ORDER BY RANDOM() LIMIT 1",
             (difficulty,)
         )
         q = cursor.fetchone()
@@ -189,7 +185,7 @@ def home():
             "id": q[0],
             "question": q[1],
             "type": q[4],
-            "options": [q[5], q[6], q[7], q[8]],
+            "options": [q[5], q[6], q[7], q[8]] if q[4] == 'multiple' else [],
         }
 
     return render_template(
@@ -278,7 +274,7 @@ def trilha_detail(trail_id):
     conn.close()
 
     units_data = []
-    unlocked = True  # primeira unidade sempre desbloqueada
+    unlocked = True
     for u in units:
         unit_id = u[0]
         completed = progress_map.get(unit_id, False)
@@ -290,7 +286,6 @@ def trilha_detail(trail_id):
             "intro": u[3],
             "status": status,
         })
-        # a próxima unidade só desbloqueia se esta foi completada
         unlocked = completed
 
     return render_template(
@@ -319,7 +314,6 @@ def unidade(unit_id):
         conn.close()
         return redirect("/trilhas")
 
-    # Verifica se a unidade está desbloqueada (unidades anteriores completas)
     cursor.execute(
         f"SELECT id FROM units WHERE trail_id={p} AND unit_order < {p} ORDER BY unit_order ASC",
         (unit[1], unit[2])
@@ -336,8 +330,9 @@ def unidade(unit_id):
             conn.close()
             return redirect(f"/trilhas/{unit[1]}")
 
+    # CORREÇÃO: Alinhando os índices das colunas de perguntas explicitamente
     cursor.execute(
-        f"""SELECT * FROM questions
+        f"""SELECT id, question, answer, difficulty, type, opt1, opt2, opt3, opt4 FROM questions
         WHERE unit_id={p}
         AND id NOT IN (SELECT question_id FROM answered WHERE user_id={p})
         ORDER BY RANDOM() LIMIT 1""",
@@ -347,7 +342,6 @@ def unidade(unit_id):
     unit_finished = False
 
     if not q:
-        # todas as perguntas dessa unidade já foram respondidas: marca como completa
         unit_finished = True
         cursor.execute(
             f"SELECT 1 FROM unit_progress WHERE user_id={p} AND unit_id={p}",
@@ -368,7 +362,7 @@ def unidade(unit_id):
             "id": q[0],
             "question": q[1],
             "type": q[4],
-            "options": [q[5], q[6], q[7], q[8]],
+            "options": [q[5], q[6], q[7], q[8]] if q[4] == 'multiple' else [],
         }
 
     return render_template(
@@ -474,7 +468,6 @@ def answer():
     cursor = conn.cursor()
     p = ph()
 
-    # Anti-spam: não pontuar duas vezes a mesma pergunta
     cursor.execute(
         f"SELECT 1 FROM answered WHERE user_id={p} AND question_id={p}",
         (session["user_id"], question_id)
