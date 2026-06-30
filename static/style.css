@@ -469,3 +469,27 @@ a.danger:hover { color: #fca5a5; }
 
     header nav a { padding: 5px 10px; }
 }
+
+/* Estilo para a unidade quando concluída */
+.unit-circle.completed {
+    background: linear-gradient(135px, #22c55e, #16a34a) !important;
+    border-color: #15803d !important;
+    box-shadow: 0 0 15px rgba(34, 197, 94, 0.4);
+    color: #ffffff !important;
+}
+
+/* Animação suave de pulso na resposta certa */
+@keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-6px); }
+    75% { transform: translateX(6px); }
+}
+
+@keyframes pop {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+    100% { transform: scale(1); }
+}
+
+.anim-errado { animation: shake 0.4s ease-in-out; }
+.anim-certo { animation: pop 0.4s ease-in-out; }

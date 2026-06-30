@@ -5,7 +5,20 @@ let enviando = false;
 let frase = [];
 
 // ===========================
-// RESPOSTA DE TEXTO
+// AUTO-FOCUS AO CARREGAR
+// ===========================
+document.addEventListener("DOMContentLoaded", () => {
+    const input = document.getElementById("resposta");
+    if (input) {
+        input.focus();
+        input.addEventListener("keydown", e => {
+            if (e.key === "Enter") enviar();
+        });
+    }
+});
+
+// ===========================
+// CAPTURA DE RESPOSTAS
 // ===========================
 function enviar() {
     const input = document.getElementById("resposta");
@@ -14,9 +27,6 @@ function enviar() {
     enviarResposta(resposta);
 }
 
-// ===========================
-// RESPOSTA DE MÚLTIPLA ESCOLHA
-// ===========================
 function responder(opcao) {
     enviarResposta(opcao);
 }
@@ -25,8 +35,7 @@ function responder(opcao) {
 // ENVIO PARA O SERVIDOR
 // ===========================
 function enviarResposta(resposta) {
-    if (enviando) return;
-    if (!question_id) return;
+    if (enviando || !question_id) return;
 
     enviando = true;
     desativarBotoes();
@@ -42,70 +51,65 @@ function enviarResposta(resposta) {
     })
     .then(data => mostrarResultado(data))
     .catch(() => {
-        mostrarMensagem("Erro de conexão. Tente novamente.", "#f97316");
+        mostrarMensagem("⚠️ Erro de conexão. Tente novamente.", "#f97316", "anim-errado");
         enviando = false;
         reativarBotoes();
     });
 }
 
 // ===========================
-// EXIBIÇÃO DO RESULTADO
+// VISUALIZAÇÃO DO FEEDBACK
 // ===========================
 function mostrarResultado(data) {
-    const el = document.getElementById("resultado");
-    if (!el) return;
+    const quizBox = document.querySelector(".quiz");
 
     if (data.result === "correct") {
-        mostrarMensagem("✓ Correto! +10 XP", "#22c55e");
+        mostrarMensagem("🎉 Correto! +10 XP", "#22c55e", "anim-certo");
+        if (quizBox) quizBox.classList.add("anim-certo");
     } else if (data.result === "already_answered") {
-        mostrarMensagem("Você já respondeu essa questão.", "#f97316");
+        mostrarMensagem("Você já respondeu essa questão.", "#f97316", "");
     } else {
-        mostrarMensagem("✗ Errado! Resposta: " + data.correct_answer, "#ef4444");
+        mostrarMensagem("❌ Errado! Resposta: " + data.correct_answer, "#ef4444", "anim-errado");
+        if (quizBox) quizBox.classList.add("anim-errado");
     }
 
+    // Mantém o reload padrão para atualizar o estado do progresso
     setTimeout(() => location.reload(), 1600);
 }
 
-function mostrarMensagem(texto, cor) {
+function mostrarMensagem(texto, cor, classeAnimacao) {
     const el = document.getElementById("resultado");
     if (!el) return;
+    
     el.textContent = texto;
     el.style.color = cor;
+    
+    if (classeAnimacao) {
+        el.classList.add(classeAnimacao);
+    }
 }
 
 // ===========================
-// CONTROLE DE BOTÕES
+// CONTROLE DE INPUTS
 // ===========================
 function desativarBotoes() {
-    document.querySelectorAll("button").forEach(btn => {
-        btn.disabled = true;
+    document.querySelectorAll("button, input").forEach(el => {
+        el.disabled = true;
+        el.style.opacity = "0.6";
+        el.style.cursor = "not-allowed";
     });
-    const input = document.getElementById("resposta");
-    if (input) input.disabled = true;
 }
 
 function reativarBotoes() {
-    document.querySelectorAll("button").forEach(btn => {
-        btn.disabled = false;
+    document.querySelectorAll("button, input").forEach(el => {
+        el.disabled = false;
+        el.style.opacity = "1";
+        el.style.cursor = "pointer";
     });
-    const input = document.getElementById("resposta");
-    if (input) input.disabled = false;
 }
 
 // ===========================
-// ENTER NO INPUT DE TEXTO
-// ===========================
-document.addEventListener("DOMContentLoaded", () => {
-    const input = document.getElementById("resposta");
-    if (input) {
-        input.addEventListener("keydown", e => {
-            if (e.key === "Enter") enviar();
-        });
-    }
-});
-
-// ===========================
-// WORD BANK
+// MECÂNICA DO WORD BANK
 // ===========================
 function addWord(palavra) {
     if (enviando) return;
@@ -122,12 +126,16 @@ function atualizarMontagem() {
         const span = document.createElement("span");
         span.textContent = palavra;
         span.style.cssText = `
-            background: #1d4ed8;
-            color: #dbeafe;
-            padding: 4px 10px;
-            border-radius: 6px;
+            background: #3b82f6;
+            color: #ffffff;
+            padding: 6px 12px;
+            border-radius: 8px;
             font-size: 14px;
+            font-weight: bold;
             cursor: pointer;
+            transition: all 0.2s ease;
+            display: inline-block;
+            margin: 4px;
         `;
         span.title = "Clique para remover";
         span.onclick = () => removerPalavra(i);
@@ -146,9 +154,4 @@ function enviarMontagem() {
     if (!resposta) return;
     enviarResposta(resposta);
     frase = [];
-}
-
-function limparMontagem() {
-    frase = [];
-    atualizarMontagem();
 }
