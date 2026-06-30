@@ -1,70 +1,360 @@
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Ranking</title>
-<link rel="stylesheet" href="/static/style.css">
-<link rel="icon" type="image/png" href="/static/logo2.png">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🏆 Ranking Global</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <link rel="icon" type="image/png" href="/static/logo2.png">
+    
+    <style>
+        /* ==========================================================================
+           ADAPTAÇÃO DO RANKING PARA AS SUAS VARIÁVEIS NATIVAS
+           ========================================================================== */
+        
+        h1.ranking-title {
+            text-align: center;
+            font-size: 32px;
+            margin-top: 10px;
+            margin-bottom: 30px;
+            color: var(--text-primary);
+        }
+
+        /* Container Principal Split (Lista na Esquerda, Pódio na Direita) */
+        .ranking-main-wrapper {
+            display: flex;
+            flex-direction: row;
+            gap: 24px;
+            max-width: 1100px;
+            margin: 0 auto;
+            align-items: flex-start;
+        }
+
+        /* --------------------------------------------------------------------------
+           LADO ESQUERDO: LISTA DOS DEMAIS COLOCADOS (4º LUGAR+)
+           -------------------------------------------------------------------------- */
+        .leaderboard-side {
+            flex: 1;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            padding: 24px;
+        }
+
+        .leaderboard-side h2 {
+            font-size: 18px;
+            color: var(--text-primary);
+            margin-top: 0;
+            margin-bottom: 16px;
+            text-align: left;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 12px;
+        }
+
+        .ranking-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .ranking-table th {
+            text-align: left;
+            color: var(--text-muted);
+            font-size: 13px;
+            text-transform: uppercase;
+            padding: 10px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .ranking-table td {
+            padding: 14px 10px;
+            border-bottom: 1px solid var(--border);
+            font-size: 15px;
+            text-align: left;
+            color: var(--text-primary);
+        }
+
+        .ranking-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .rank-number {
+            font-weight: bold;
+            color: var(--accent);
+            width: 40px;
+        }
+
+        .user-name-list {
+            font-weight: 600;
+        }
+
+        .user-xp-list {
+            color: var(--text-muted);
+            font-size: 14px;
+        }
+
+        .user-level-tag {
+            background: var(--bg-base);
+            padding: 4px 10px;
+            border-radius: var(--radius-sm);
+            font-size: 12px;
+            color: var(--accent);
+            border: 1px solid var(--border);
+            font-weight: 600;
+        }
+
+        /* --------------------------------------------------------------------------
+           DIREITA: PÓDIO ESTILO KAHOOT (TOP 3) - CORES UNIFICADAS E REFINADAS
+           -------------------------------------------------------------------------- */
+        .podium-side {
+            flex: 1.2;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-end;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            padding: 40px 24px 24px 24px;
+            min-height: 440px;
+        }
+
+        .podium-container {
+            display: flex;
+            align-items: flex-end;
+            justify-content: center;
+            width: 100%;
+            gap: 12px;
+            margin-top: auto;
+        }
+
+        /* Colunas do Pódio */
+        .podium-column {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 33%;
+            position: relative;
+        }
+
+        /* Blocos Sólidos do Pódio - Base Roxa Unificada */
+        .podium-block {
+            width: 100%;
+            border-top-left-radius: var(--radius-md);
+            border-top-right-radius: var(--radius-md);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            background: linear-gradient(135deg, #2e1065, #1e1b4b); /* Roxo profundo unificado Kahoot */
+            border-bottom: none !important;
+        }
+
+        /* Dados do Usuário acima do bloco */
+        .podium-user-info {
+            text-align: center;
+            margin-bottom: 12px;
+            width: 100%;
+        }
+
+        .podium-username {
+            font-weight: bold;
+            font-size: 15px;
+            color: var(--text-primary);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            margin-bottom: 2px;
+        }
+
+        .podium-xp {
+            font-size: 13px;
+            color: var(--text-muted);
+        }
+
+        /* Emblemas de Numeração */
+        .podium-badge {
+            width: 42px;
+            height: 42px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            font-weight: 800;
+            color: #ffffff;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.4);
+            margin-bottom: 8px;
+        }
+
+        /* ==========================================
+           CUSTOMIZAÇÃO INDIVIDUAL POR METAL (BORDAS E LUZES)
+           ========================================== */
+
+        /* 1º Lugar (Centro - Ouro) */
+        .podium-column.first .podium-block {
+            height: 190px;
+            border: 2px solid #eab308; /* Borda Ouro */
+            box-shadow: inset 0 0 15px rgba(234, 179, 8, 0.15); /* Brilho interno dourado */
+        }
+        .podium-column.first .podium-badge {
+            background: #eab308;
+            border: 2px solid #fef08a;
+            color: #78350f;
+        }
+        .podium-column.first .podium-username {
+            color: #fde047; /* Nick em destaque dourado */
+            font-size: 17px;
+        }
+
+        /* 2º Lugar (Esquerda - Prata) */
+        .podium-column.second .podium-block {
+            height: 130px;
+            border: 2px solid #9ca3af; /* Borda Prata */
+            box-shadow: inset 0 0 15px rgba(156, 163, 175, 0.15); /* Brilho interno prateado */
+        }
+        .podium-column.second .podium-badge {
+            background: #9ca3af;
+            border: 2px solid #e5e7eb;
+            color: #1f2937;
+        }
+        .podium-column.second .podium-username {
+            color: #e5e7eb;
+        }
+
+        /* 3º Lugar (Direita - Bronze) */
+        .podium-column.third .podium-block {
+            height: 95px;
+            border: 2px solid #cd7f32; /* Borda Bronze */
+            box-shadow: inset 0 0 15px rgba(205, 127, 50, 0.15); /* Brilho interno bronze */
+        }
+        .podium-column.third .podium-badge {
+            background: #cd7f32;
+            border: 2px solid #fb923c;
+            color: #451a03;
+        }
+        .podium-column.third .podium-username {
+            color: #ffedd5;
+        }
+
+        .podium-level {
+            font-size: 11px;
+            font-weight: bold;
+            letter-spacing: 0.5px;
+            color: var(--accent);
+            background: rgba(56, 189, 248, 0.15);
+            padding: 2px 8px;
+            border-radius: 6px;
+        }
+
+        /* Responsividade para manter o app limpo em telas menores */
+        @media (max-width: 850px) {
+            .ranking-main-wrapper {
+                flex-direction: column;
+            }
+            .podium-side, .leaderboard-side {
+                width: 100%;
+            }
+            .podium-side {
+                order: -1; /* Joga o pódio para o topo em telas mobile */
+            }
+        }
+    </style>
 </head>
 <body>
 
-<h1>🏆 Ranking Global</h1>
+    <h1 class="ranking-title">🏆 Ranking Global</h1>
 
-<div class="ranking-container">
+    {% set top_1 = users[0] if users|length > 0 else none %}
+    {% set top_2 = users[1] if users|length > 1 else none %}
+    {% set top_3 = users[2] if users|length > 2 else none %}
 
-<table>
+    <div class="ranking-main-wrapper">
 
-<thead>
-<tr>
-<th>#</th>
-<th>Usuário</th>
-<th>XP</th>
-<th>Nível</th>
-</tr>
-</thead>
+        <div class="leaderboard-side">
+            <h2>Classificação Geral</h2>
+            <table class="ranking-table">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Usuário</th>
+                        <th>XP</th>
+                        <th>Nível</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% if users|length > 3 %}
+                        {% for user in users[3:] %}
+                        <tr>
+                            <td class="rank-number">{{ loop.index + 3 }}</td>
+                            <td class="user-name-list">{{ user.username }}</td>
+                            <td class="user-xp-list">{{ user.xp }} XP</td>
+                            <td><span class="user-level-tag">Lvl {{ user.xp // 50 }}</span></td>
+                        </tr>
+                        {% endfor %}
+                    {% else %}
+                        <tr>
+                            <td colspan="4" style="color: var(--text-muted); text-align: center; padding: 30px; font-style: italic;">
+                                Nenhuma outra colocação registrada ainda.
+                            </td>
+                        </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
 
-<tbody>
+        <div class="podium-side">
+            <div class="podium-container">
 
-{% for user in users %}
+                <div class="podium-column second">
+                    {% if top_2 %}
+                    <div class="podium-user-info">
+                        <div class="podium-username">{{ top_2.username }}</div>
+                        <div class="podium-xp">{{ top_2.xp }} XP</div>
+                    </div>
+                    <div class="podium-block">
+                        <div class="podium-badge">2</div>
+                        <span class="podium-level">LVL {{ top_2.xp // 50 }}</span>
+                    </div>
+                    {% endif %}
+                </div>
 
-<tr>
+                <div class="podium-column first">
+                    {% if top_1 %}
+                    <div class="podium-user-info">
+                        <div class="podium-username">👑 {{ top_1.username }}</div>
+                        <div class="podium-xp">{{ top_1.xp }} XP</div>
+                    </div>
+                    <div class="podium-block">
+                        <div class="podium-badge">1</div>
+                        <span class="podium-level">LVL {{ top_1.xp // 50 }}</span>
+                    </div>
+                    {% endif %}
+                </div>
 
-<td>
+                <div class="podium-column third">
+                    {% if top_3 %}
+                    <div class="podium-user-info">
+                        <div class="podium-username">{{ top_3.username }}</div>
+                        <div class="podium-xp">{{ top_3.xp }} XP</div>
+                    </div>
+                    <div class="podium-block">
+                        <div class="podium-badge">3</div>
+                        <span class="podium-level">LVL {{ top_3.xp // 50 }}</span>
+                    </div>
+                    {% endif %}
+                </div>
 
-{% if loop.index == 1 %}
-🥇
-{% elif loop.index == 2 %}
-🥈
-{% elif loop.index == 3 %}
-🥉
-{% else %}
-{{ loop.index }}
-{% endif %}
+            </div>
+        </div>
 
-</td>
+    </div>
 
-<td>{{ user.username }}</td>
-
-<td>{{ user.xp }}</td>
-
-<td>{{ user.xp // 50 }}</td>
-
-</tr>
-
-{% endfor %}
-
-</tbody>
-
-</table>
-
-</div>
-
-<br>
-
-<a href="/" class="btn-jogar">
-⬅ Voltar
-</a>
+    <div style="text-align: center; margin-top: 32px;">
+        <a href="/" class="btn-jogar" style="text-decoration: none; display: inline-block;">
+            ⬅ Voltar ao Início
+        </a>
+    </div>
 
 </body>
 </html>
