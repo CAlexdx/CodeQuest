@@ -6,6 +6,8 @@
     <title>{{ unit.title }}</title>
     <link rel="stylesheet" href="/static/style.css">
     <link rel="icon" type="image/png" href="/static/logo2.png">
+    
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
 </head>
 <body>
 
@@ -29,6 +31,30 @@
 
     <script>
         localStorage.setItem('last_completed_id', "{{ unit.id }}");
+
+        // Função para soltar rajadas de confete da esquerda e da direita
+        function lancarConfetes() {
+            // Rajada da Esquerda
+            confetti({
+                particleCount: 80,
+                angle: 60,
+                spread: 70,
+                origin: { x: 0, y: 0.8 }
+            });
+            // Rajada da Direita
+            confetti({
+                particleCount: 80,
+                angle: 120,
+                spread: 70,
+                origin: { x: 1, y: 0.8 }
+            });
+        }
+
+        // Dispara imediatamente ao carregar a tela de sucesso
+        lancarConfetes();
+        
+        // Dá uma segunda rajada após 500ms para um efeito mais encorpado
+        setTimeout(lancarConfetes, 500);
     </script>
 
     {% elif question %}
