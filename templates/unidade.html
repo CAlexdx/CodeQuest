@@ -1,103 +1,85 @@
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>{{ unit.title }}</title>
-<link rel="stylesheet" href="/static/style.css">
-<link rel="icon" type="image/png" href="/static/logo2.png">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ unit.title }}</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <link rel="icon" type="image/png" href="/static/logo2.png">
 </head>
 <body>
 
 <div class="quiz">
 
-<h1>{{ unit.title }}</h1>
+    <h1>{{ unit.title }}</h1>
 
-<p class="intro-text">
-    {{ unit.intro }}
-</p>
+    <p class="intro-text">
+        {{ unit.intro_text or unit.intro }}
+    </p>
 
-{% if unit_finished %}
+    {% if unit_finished %}
 
-<div class="success-box">
+    <div class="success-box">
+        <h2>🎉 Unidade concluída!</h2>
+        <p>Você completou todas as perguntas desta unidade.</p>
+        <a href="/trilhas/{{ unit.trail_id }}" class="btn-jogar">
+            Voltar para Trilha
+        </a>
+    </div>
 
-<h2>🎉 Unidade concluída!</h2>
+    {% elif question %}
 
-<p>
-Você completou todas as perguntas desta unidade.
-</p>
+    <h2>{{ question.question }}</h2>
 
-<a href="/trilhas/{{ unit.trail_id }}" class="btn-jogar">
-Voltar para Trilha
-</a>
+    <div id="area-resposta">
 
-</div>
+        {% if question.type == "multiple" %}
+        <div class="area-botoes">
+            {% for opt in question.options if opt %}
+            <button onclick="responder('{{ opt }}')">
+                {{ opt }}
+            </button>
+            {% endfor %}
+        </div>
+        {% endif %}
 
-{% elif question %}
+        {% if question.type in ["text", "open", "cloze"] %}
+        <input 
+            type="text" 
+            id="resposta" 
+            placeholder="Digite sua resposta">
+        <button onclick="enviar()">
+            Responder
+        </button>
+        {% endif %}
 
-<h2>{{ question.question }}</h2>
+        {% if question.type == "wordbank" %}
+        <div id="wordbank">
+            {% for opt in question.options if opt %}
+            <button onclick="addWord('{{ opt }}')">
+                {{ opt }}
+            </button>
+            {% endfor %}
+        </div>
 
-<div id="area-resposta">
+        <div id="montagem"></div>
 
-{% if question.type == "multiple" %}
+        <button onclick="enviarMontagem()">
+            Confirmar
+        </button>
+        {% endif %}
 
-<div class="area-botoes">
+    </div>
 
-{% for opt in question.options if opt %}
-<button onclick="responder('{{ opt }}')">
-{{ opt }}
-</button>
-{% endfor %}
+    <p id="resultado"></p>
 
-</div>
-
-{% endif %}
-
-{% if question.type in ["text", "cloze"] %}
-
-<input
-type="text"
-id="resposta"
-placeholder="Digite sua resposta">
-
-<button onclick="enviar()">
-Responder
-</button>
-
-{% endif %}
-
-{% if question.type == "wordbank" %}
-
-<div id="wordbank">
-
-{% for opt in question.options if opt %}
-<button onclick="addWord('{{ opt }}')">
-{{ opt }}
-</button>
-{% endfor %}
-
-</div>
-
-<div id="montagem"></div>
-
-<button onclick="enviarMontagem()">
-Confirmar
-</button>
-
-{% endif %}
-
-</div>
-
-<p id="resultado"></p>
-
-{% endif %}
+    {% endif %}
 
 </div>
 
 <script>
-const question_id = "{{ question.id if question else '' }}";
+    const question_id = "{{ question.id if question else '' }}";
 </script>
-
 <script src="/static/script.js"></script>
 
 </body>
