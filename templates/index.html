@@ -6,33 +6,228 @@
     <title>CodeQuest</title>
     <link rel="stylesheet" href="/static/style.css">
     <link rel="icon" type="image/png" href="/static/logo2.png">
+    <style>
+        /* Container Principal Centralizado */
+        .main-container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 10px 20px 40px 20px;
+            text-align: center;
+        }
+
+        /* Slogan abaixo da logo */
+        .slogan-topo {
+            margin: 0; 
+            font-size: 1.1rem; 
+            color: var(--text-muted);
+            font-weight: 400;
+        }
+
+        /* Barra de Status do Usuário em Grid Moderna */
+        .status-bar-modern {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            background: rgba(30, 41, 59, 0.4);
+            border: 1px solid var(--border);
+            backdrop-filter: blur(8px);
+            padding: 16px;
+            border-radius: var(--radius-md);
+            margin: 30px 0;
+            gap: 12px;
+        }
+
+        .status-item-box {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            font-size: 15px;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        .status-item-box span.label {
+            font-size: 11px;
+            color: var(--text-muted);
+            font-weight: 600;
+            text-transform: uppercase;
+            margin-bottom: 4px;
+            letter-spacing: 0.5px;
+        }
+
+        /* Grid de Cards - Adeus botões empilhados compridos */
+        .menu-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 20px;
+            margin-top: 25px;
+        }
+
+        .menu-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            padding: 32px 24px;
+            text-decoration: none;
+            color: var(--text-primary);
+            transition: transform 0.2s, border-color 0.2s, box-shadow 0.2s;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+        }
+
+        .menu-card:hover {
+            transform: translateY(-4px);
+            border-color: var(--accent);
+            box-shadow: 0 8px 24px rgba(56, 189, 248, 0.15);
+        }
+
+        .menu-card .card-icon {
+            font-size: 42px;
+            margin-bottom: 16px;
+        }
+
+        .menu-card h3 {
+            font-size: 18px;
+            font-weight: 700;
+            margin: 0 0 8px 0;
+        }
+
+        .menu-card p {
+            font-size: 13px;
+            color: var(--text-muted);
+            line-height: 1.45;
+            margin: 0;
+        }
+
+        /* Container e botão discreto de Sair */
+        .btn-logout-container {
+            margin-top: 40px;
+        }
+        
+        .btn-logout-modern {
+            background: transparent;
+            border: 1px solid rgba(239, 68, 68, 0.4);
+            color: var(--red);
+            padding: 8px 24px;
+            font-size: 13px;
+            font-weight: 600;
+            border-radius: var(--radius-sm);
+            text-decoration: none;
+            transition: background 0.2s, color 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .btn-logout-modern:hover {
+            background: var(--red);
+            color: #ffffff;
+        }
+
+        /* 💬 BOTÃO FLUTUANTE DE FEEDBACK FIXO NO CANTO INFERIOR DIREITO */
+        .feedback-float-btn {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            background: linear-gradient(135deg, #a855f7, #7c3aed); /* Tom roxo/neon vivo */
+            color: #ffffff;
+            padding: 12px 20px;
+            border-radius: 50px;
+            font-weight: 700;
+            font-size: 14px;
+            text-decoration: none;
+            box-shadow: 0 4px 14px rgba(124, 58, 237, 0.4);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            z-index: 9999;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .feedback-float-btn:hover {
+            transform: scale(1.05) translateY(-2px);
+            box-shadow: 0 6px 20px rgba(124, 58, 237, 0.6);
+            color: #ffffff;
+        }
+    </style>
 </head>
 <body>
-    <header style="text-align: center; padding: 20px 0;">
-        
-        <img src="/static/logo1.png" alt="CodeQuest Logo" style="max-width: 180px; height: auto; display: block; margin: 0 auto 10px;">
-        <p class="slogan-topo" style="margin: 0; font-size: 1.1rem; opacity: 0.9;">Uma plataforma web gamificada de aprendizado em programação!</p>
-    </header>
 
-    <div class="status-bar">
-        <span class="status-item"><span class="user-name"> {{ username }}</span></span>
-        <span class="status-item"> {{ xp }} XP</span>
-        <span class="status-item"> Nível {{ level }}</span>
-        <span class="status-item">🔥 {{ streak }}</span>
-    </div>
-
-    <div class="quiz">
-        <h2>Bem-vindo de volta!</h2>
-        <p style="margin-bottom: 24px;">Continue sua jornada nas trilhas de programação.</p>
+    <div class="main-container">
         
-        <div class="btn-container">
-            <a href="/trilhas" class="btn-jogar"> Trilhas de Aprendizagem</a>
-            <a href="/ranking" class="btn-jogar">🏆 Ranking Global</a>
-            <a href="/profile" class="btn-jogar"> Meu Perfil</a>
-            {% if session.user_id %}
-                <a href="/logout" class="btn-jogar" style="background: var(--red);"> Sair</a>
-            {% endif %}
+        <header style="text-align: center; padding: 20px 0 10px 0;">
+            <img src="/static/logo1.png" alt="CodeQuest Logo" style="max-width: 180px; height: auto; display: block; margin: 0 auto 12px;">
+            <p class="slogan-topo">Uma plataforma web gamificada de aprendizado em programação!</p>
+        </header>
+
+        <div class="status-bar-modern">
+            <div class="status-item-box">
+                <span class="label">Jogador</span>
+                👤 {{ username }}
+            </div>
+            <div class="status-item-box">
+                <span class="label">Pontuação</span>
+                ⚡ {{ xp }} XP
+            </div>
+            <div class="status-item-box">
+                <span class="label">Progresso</span>
+                ⭐ Nível {{ level }}
+            </div>
+            <div class="status-item-box">
+                <span class="label">Ofensiva</span>
+                🔥 {{ streak }}
+            </div>
         </div>
+
+        <h2 style="font-size: 24px; font-weight: 700; margin-bottom: 6px;">Bem-vindo de volta!</h2>
+        <p style="color: var(--text-muted); margin: 0 0 24px 0;">Continue sua jornada nas trilhas de programação.</p>
+
+        <div class="menu-grid">
+            
+            <a href="/trilhas" class="menu-card">
+                <div class="card-icon">🚀</div>
+                <h3>Trilhas</h3>
+                <p>Explore módulos práticos, responda questões e acumule pontos.</p>
+            </a>
+
+            <a href="/ranking" class="menu-card">
+                <div class="card-icon">🏆</div>
+                <h3>Ranking</h3>
+                <p>Dispute o topo do pódio e veja a classificação dos jogadores.</p>
+            </a>
+
+            <a href="/profile" class="menu-card">
+                <div class="card-icon">⚙️</div>
+                <h3>Perfil</h3>
+                <p>Verifique suas estatísticas e configure os detalhes da sua conta.</p>
+            </a>
+
+            {% if session.is_admin %}
+            <a href="/admin" class="menu-card" style="border-color: rgba(249, 115, 22, 0.4);">
+                <div class="card-icon">🛡️</div>
+                <h3 style="color: var(--orange);">Painel Admin</h3>
+                <p>Acesse o painel para monitorar dados e configurações globais.</p>
+            </a>
+            {% endif %}
+
+        </div>
+
+        {% if session.user_id %}
+        <div class="btn-logout-container">
+            <a href="/logout" class="btn-logout-modern">
+                Sair da Conta
+            </a>
+        </div>
+        {% endif %}
+
     </div>
+
+    <a href="https://forms.gle/McVT3E7VctU3iFdGA" target="_blank" class="feedback-float-btn">
+        💬 Feedback
+    </a>
+
 </body>
 </html>
