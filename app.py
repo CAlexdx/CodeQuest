@@ -514,9 +514,22 @@ def answer():
     correct = row[0]
     unit_id = row[1]
 
-    # 🔥 CORREÇÃO DO BUG 1: Comparação robusta usando o simplificar_texto
-    # Se a normalização antiga estava quebrando com aspas ou acentos, essa resolve.
-    is_correct = simplificar_texto(user_answer) == simplificar_texto(correct)
+    # 🔥 BLINDAGEM CONTRA BUG DE ALTERNATIVAS:
+    # Remove espaços extras nas pontas, quebras de linha e padroniza aspas simples/duplas
+    def limpar_caracteres_codigo(texto):
+        if not texto: return ""
+        t = str(texto).strip()
+        # Substitui variações de aspas comuns em strings de programação
+        t = t.replace('"', "'").replace('“', "'").replace('”', "'").replace('`', "'")
+        # Remove quebras de linha internas que possam quebrar o JSON
+        t = " ".join(t.split())
+        return t
+
+    user_limpo = limpar_caracteres_codigo(user_answer)
+    correct_limpo = limpar_caracteres_codigo(correct)
+
+    # Faz a comparação utilizando a sua função original + a limpeza de código
+    is_correct = simplificar_texto(user_limpo) == simplificar_texto(correct_limpo)
     result = "correct" if is_correct else "wrong"
 
     if result == "correct":

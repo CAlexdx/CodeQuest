@@ -28,7 +28,9 @@ function enviar() {
 }
 
 function responder(opcao) {
-    enviarResposta(opcao);
+    // 🔥 CORREÇÃO: Remove quebras de linha e espaços extras invisíveis gerados pelo HTML das alternativas
+    const opcaoLimpa = opcao.replace(/\s+/g, ' ').trim();
+    enviarResposta(opcaoLimpa);
 }
 
 // ===========================
@@ -67,7 +69,6 @@ function mostrarResultado(data) {
         mostrarMensagem("🎉 Correto! +10 XP", "#22c55e", "anim-certo");
         if (quizBox) quizBox.classList.add("anim-certo");
 
-        // Recarrega a página atual para seguir para a próxima pergunta da unidade
         setTimeout(() => {
             location.reload();
         }, 1600);
@@ -121,54 +122,6 @@ function reativarBotoes() {
 }
 
 // ===========================
-// MECÂNICA DO WORD BANK
-// ===========================
-function addWord(palavra) {
-    if (enviando) return;
-    frase.push(palavra);
-    atualizarMontagem();
-}
-
-function atualizarMontagem() {
-    const el = document.getElementById("montagem");
-    if (!el) return;
-
-    el.innerHTML = "";
-    frase.forEach((palavra, i) => {
-        const span = document.createElement("span");
-        span.textContent = palavra;
-        span.style.cssText = `
-            background: #3b82f6;
-            color: #ffffff;
-            padding: 6px 12px;
-            border-radius: 8px;
-            font-size: 14px;
-            font-weight: bold;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            display: inline-block;
-            margin: 4px;
-        `;
-        span.title = "Clique para remover";
-        span.onclick = () => removerPalavra(i);
-        el.appendChild(span);
-    });
-}
-
-function removerPalavra(index) {
-    if (enviando) return;
-    frase.splice(index, 1);
-    atualizarMontagem();
-}
-
-function enviarMontagem() {
-    const resposta = frase.join(" ").trim();
-    if (!resposta) return;
-    enviarResposta(resposta);
-    frase = [];
-}
-
-// ===========================
 // MECÂNICA DO WORD BANK (ESTILO DUOLINGO)
 // ===========================
 function selecionarPalavra(botao) {
@@ -177,7 +130,7 @@ function selecionarPalavra(botao) {
     const palavra = botao.textContent.trim();
     const index = botao.getAttribute("data-index");
 
-    // Estilo Duolingo: Desativa visualmente o botão mantendo o espaço dele no layout
+    // Desativa visualmente o botão mantendo o espaço dele no layout
     botao.classList.add("word-disabled");
 
     // Adiciona o objeto à frase com o ID de rastreio original
