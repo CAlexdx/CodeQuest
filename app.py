@@ -358,11 +358,20 @@ def unidade(unit_id):
 
     question_data = None
     if q:
+        # 🔥 CORREÇÃO: Pega as opções tanto para múltipla escolha quanto para o Word Bank
+        options_list = [opt for opt in [q[5], q[6], q[7], q[8]] if opt]
+        
+        # 🔥 MELHORIA DE CÓDIGO: Se for Word Bank, embaralha as palavras automaticamente
+        # para que elas não apareçam já na ordem correta para o usuário!
+        if q[4] == 'wordbank':
+            import random
+            random.shuffle(options_list)
+
         question_data = {
             "id": q[0],
             "question": q[1],
             "type": q[4],
-            "options": [q[5], q[6], q[7], q[8]] if q[4] == 'multiple' else [],
+            "options": options_list, # Lista limpa e preparada
         }
 
     return render_template(
@@ -448,8 +457,22 @@ def logout():
     return redirect("/login")
 
 # ==========================
-# RESPOSTA (API)
+# RESPOSTA (API) - CORRIGIDA
 # ==========================
+
+import re
+
+def simplificar_texto(texto):
+    """ Remove aspas, espaços duplos e deixa tudo em minúsculo para uma comparação idêntica """
+    if not texto:
+        return ""
+    # Converte para string, remove espaços nas pontas e deixa em minúsculo
+    t = str(texto).strip().lower()
+    # Substitui aspas curvas por normais, ou remove aspas inteiramente para evitar conflitos
+    t = t.replace("'", "").replace('"', "").replace("`", "")
+    # Remove espaços duplos ocultos
+    t = re.sub(r'\s+', ' ', t)
+    return t
 
 @app.route("/answer", methods=["POST"])
 def answer():
@@ -468,6 +491,7 @@ def answer():
     cursor = conn.cursor()
     p = ph()
 
+    # Verifica se já respondeu
     cursor.execute(
         f"SELECT 1 FROM answered WHERE user_id={p} AND question_id={p}",
         (session["user_id"], question_id)
@@ -476,8 +500,9 @@ def answer():
         conn.close()
         return jsonify({"result": "already_answered"})
 
+    # 🔥 CORREÇÃO: Buscando a resposta correta E o unit_id juntos para o mapa funcionar
     cursor.execute(
-        f"SELECT answer FROM questions WHERE id={p}",
+        f"SELECT answer, unit_id FROM questions WHERE id={p}",
         (question_id,)
     )
     row = cursor.fetchone()
@@ -487,7 +512,12 @@ def answer():
         return jsonify({"error": "Pergunta não encontrada"}), 404
 
     correct = row[0]
-    result = "correct" if normalize(user_answer) == normalize(correct) else "wrong"
+    unit_id = row[1]
+
+    # 🔥 CORREÇÃO DO BUG 1: Comparação robusta usando o simplificar_texto
+    # Se a normalização antiga estava quebrando com aspas ou acentos, essa resolve.
+    is_correct = simplificar_texto(user_answer) == simplificar_texto(correct)
+    result = "correct" if is_correct else "wrong"
 
     if result == "correct":
         cursor.execute(
@@ -504,7 +534,12 @@ def answer():
 
     update_streak(session["user_id"])
 
-    return jsonify({"result": result, "correct_answer": correct})
+    # Retorna o resultado limpíssimo e o unit_id para amarrar com o JS do mapa
+    return jsonify({
+        "result": result, 
+        "correct_answer": correct,
+        "unit_id": unit_id
+    })
 
 # ==========================
 # PAINEL ADMIN

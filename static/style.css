@@ -493,3 +493,81 @@ a.danger:hover { color: #fca5a5; }
 
 .anim-errado { animation: shake 0.4s ease-in-out; }
 .anim-certo { animation: pop 0.4s ease-in-out; }
+
+/* Container das Opções Disponíveis */
+.wordbank-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    justify-content: center;
+    margin: 24px 0;
+}
+
+/* Área de Linha Solta (Onde monta a frase) */
+.montagem-zone {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+    justify-content: center;
+    min-height: 64px;
+    background: #1e293b;
+    border: 2px dashed #475569;
+    border-radius: 16px;
+    padding: 12px;
+    margin-bottom: 24px;
+    transition: all 0.2s ease;
+}
+
+/* Pílulas de Palavras Base */
+.word-pill {
+    background: #ffffff !important;
+    color: #0f172a !important;
+    border: 2px solid #e2e8f0 !important;
+    border-bottom: 5px solid #cbd5e1 !important; /* Efeito 3D de botão */
+    border-radius: 12px;
+    padding: 10px 20px;
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+    display: inline-block;
+    transition: all 0.1s ease;
+    opacity: 1;
+}
+
+.word-pill:active:not(.word-disabled) {
+    border-bottom-width: 2px;
+    transform: translateY(3px);
+}
+
+/* Estado de palavra já usada (Esmaecida no Banco) */
+.word-pill.word-disabled {
+    background: #334155 !important;
+    color: #334155 !important; /* Esconde o texto sumindo com ele */
+    border-color: #1e293b !important;
+    border-bottom: 2px solid #1e293b !important;
+    cursor: not-allowed;
+    opacity: 0.4;
+    box-shadow: none;
+}
+
+/* Palavra quando está posicionada na parte superior */
+.selected-word {
+    background: #3b82f6 !important;
+    color: #ffffff !important;
+    border-color: #2563eb !important;
+    border-bottom: 4px solid #1d4ed8 !important;
+    animation: popIn 0.15s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+/* Texto indicativo discreto */
+.placeholder-text {
+    color: #64748b;
+    font-size: 14px;
+    font-style: italic;
+}
+
+@keyframes popIn {
+    from { transform: scale(0.8); opacity: 0; }
+    to { transform: scale(1); opacity: 1; }
+}

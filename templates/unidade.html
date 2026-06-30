@@ -27,6 +27,10 @@
         </a>
     </div>
 
+    <script>
+        localStorage.setItem('last_completed_id', "{{ unit.id }}");
+    </script>
+
     {% elif question %}
 
     <h2>{{ question.question }}</h2>
@@ -36,7 +40,7 @@
         {% if question.type == "multiple" %}
         <div class="area-botoes">
             {% for opt in question.options if opt %}
-            <button onclick="responder('{{ opt }}')">
+            <button onclick="responder(this.textContent.trim())">
                 {{ opt }}
             </button>
             {% endfor %}
@@ -54,18 +58,20 @@
         {% endif %}
 
         {% if question.type == "wordbank" %}
-        <div id="wordbank">
+        <div id="wordbank" class="wordbank-container">
             {% for opt in question.options if opt %}
-            <button onclick="addWord('{{ opt }}')">
+            <button class="word-pill" data-index="{{ loop.index0 }}" onclick="selecionarPalavra(this)">
                 {{ opt }}
             </button>
             {% endfor %}
         </div>
 
-        <div id="montagem"></div>
+        <div id="montagem" class="montagem-zone">
+            <span class="placeholder-text">Toque nas palavras para ordenar...</span>
+        </div>
 
-        <button onclick="enviarMontagem()">
-            Confirmar
+        <button onclick="enviarMontagem()" class="btn-confirmar">
+            Confirmar Resposta
         </button>
         {% endif %}
 

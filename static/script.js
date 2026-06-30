@@ -66,15 +66,27 @@ function mostrarResultado(data) {
     if (data.result === "correct") {
         mostrarMensagem("🎉 Correto! +10 XP", "#22c55e", "anim-certo");
         if (quizBox) quizBox.classList.add("anim-certo");
+
+        // Recarrega a página atual para seguir para a próxima pergunta da unidade
+        setTimeout(() => {
+            location.reload();
+        }, 1600);
+
     } else if (data.result === "already_answered") {
         mostrarMensagem("Você já respondeu essa questão.", "#f97316", "");
+        
+        setTimeout(() => {
+            location.reload();
+        }, 1600);
+
     } else {
         mostrarMensagem("❌ Errado! Resposta: " + data.correct_answer, "#ef4444", "anim-errado");
         if (quizBox) quizBox.classList.add("anim-errado");
+        
+        setTimeout(() => {
+            location.reload();
+        }, 1600);
     }
-
-    // Mantém o reload padrão para atualizar o estado do progresso
-    setTimeout(() => location.reload(), 1600);
 }
 
 function mostrarMensagem(texto, cor, classeAnimacao) {
@@ -156,11 +168,64 @@ function enviarMontagem() {
     frase = [];
 }
 
-// Exemplo de código dentro da sua tela de Quiz/Unidade concluída:
-function finalizarUnidade(unidadeId) {
-    // Salva qual unidade acabou de ser realizada com sucesso
-    localStorage.setItem('last_completed_id', unidadeId);
+// ===========================
+// MECÂNICA DO WORD BANK (ESTILO DUOLINGO)
+// ===========================
+function selecionarPalavra(botao) {
+    if (enviando || botao.classList.contains("word-disabled")) return;
+
+    const palavra = botao.textContent.trim();
+    const index = botao.getAttribute("data-index");
+
+    // Estilo Duolingo: Desativa visualmente o botão mantendo o espaço dele no layout
+    botao.classList.add("word-disabled");
+
+    // Adiciona o objeto à frase com o ID de rastreio original
+    frase.push({ id: index, texto: palavra });
+    atualizarMontagem();
+}
+
+function atualizarMontagem() {
+    const el = document.getElementById("montagem");
+    if (!el) return;
+
+    el.innerHTML = "";
+
+    if (frase.length === 0) {
+        el.innerHTML = `<span class="placeholder-text">Toque nas palavras para ordenar...</span>`;
+        return;
+    }
+
+    // Renderiza as palavras selecionadas na zona de montagem
+    frase.forEach((item, i) => {
+        const span = document.createElement("span");
+        span.textContent = item.texto;
+        span.className = "word-pill selected-word";
+        span.title = "Clique para remover";
+        span.onclick = () => removerPalavraDaMontagem(i, item.id);
+        el.appendChild(span);
+    });
+}
+
+function removerPalavraDaMontagem(posicaoNaFrase, originalIndex) {
+    if (enviando) return;
+
+    // Encontra o botão original no banco de palavras usando o índice e devolve a cor dele
+    const botaoOriginal = document.querySelector(`#wordbank button[data-index="${originalIndex}"]`);
+    if (botaoOriginal) {
+        botaoOriginal.classList.remove("word-disabled");
+    }
+
+    // Remove do array da frase montada
+    frase.splice(posicaoNaFrase, 1);
+    atualizarMontagem();
+}
+
+function enviarMontagem() {
+    // Une as palavras selecionadas separando por espaço simples
+    const resposta = frase.map(item => item.texto).join(" ").trim();
+    if (!resposta) return;
     
-    // Redireciona de volta para a trilha
-    window.location.href = "/trilhas/1"; 
+    enviarResposta(resposta);
+    frase = []; // Reseta o estado local
 }
