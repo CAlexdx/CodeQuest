@@ -155,3 +155,12 @@ function enviarMontagem() {
     enviarResposta(resposta);
     frase = [];
 }
+
+// Exemplo de código dentro da sua tela de Quiz/Unidade concluída:
+function finalizarUnidade(unidadeId) {
+    // Salva qual unidade acabou de ser realizada com sucesso
+    localStorage.setItem('last_completed_id', unidadeId);
+    
+    // Redireciona de volta para a trilha
+    window.location.href = "/trilhas/1"; 
+}

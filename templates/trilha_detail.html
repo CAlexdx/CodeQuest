@@ -7,40 +7,102 @@
     <link rel="stylesheet" href="/static/style.css">
     <link rel="icon" type="image/png" href="/static/logo2.png">
     <style>
+        :root {
+            --anim-speed: 0.8s; /* Velocidade do preenchimento da linha */
+        }
+
         .path-container {
             display: flex;
             flex-direction: column;
             align-items: center;
             margin: 40px 0;
-        }
-        .path-node-wrapper {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
             position: relative;
+            padding-bottom: 80px; 
         }
         
-        /* Estilização para o efeito de zigue-zague */
-        .node-left { margin-right: 90px; }
-        .node-right { margin-left: 90px; }
+        .path-node-wrapper {
+            width: 75px;
+            height: 75px;
+            position: relative;
+            z-index: 2; 
+        }
+        
+        .node-left { transform: translateX(-80px); }
+        .node-center { transform: translateX(0px); }
+        .node-right { transform: translateX(80px); }
 
+        .unit-title {
+            position: absolute;
+            top: 84px; 
+            left: 50%;
+            transform: translateX(-50%);
+            width: 150px;
+            font-size: 14px;
+            font-weight: 600;
+            color: #94a3b8;
+            text-align: center;
+            line-height: 1.3;
+            pointer-events: none;
+        }
+
+        /* CONTAINER DA LINHA */
         .path-line {
-            width: 8px;
-            height: 50px;
+            height: 50px; 
+            width: 10px;
+            position: relative;
+            z-index: 1;
+        }
+        
+        /* O fundo cinza da linha (cano base) */
+        .path-line::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 12px;
+            border-radius: 6px;
             background: #334155;
-            margin: 6px 0;
-            border-radius: 4px;
+            transform-origin: center center;
         }
-        
-        /* CORREÇÃO: Linha conectora agora fica verde quando completada */
-        .path-line.completed { 
-            background: #22c55e; 
-        }
-        
-        /* Linhas inclinadas para conectar o zigue-zague */
-        .line-to-left { transform: rotate(25deg); }
-        .line-to-right { transform: rotate(-25deg); }
 
+        /* ANIMAÇÃO DUOLINGO: A linha verde que cresce por cima do cano cinza */
+        .path-line::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 12px;
+            border-radius: 6px;
+            background: #22c55e;
+            transform-origin: center center;
+            
+            /* Começa invisível (cortada no topo) */
+            clip-path: polygon(0 0, 100% 0, 100% 0, 0 0);
+            transition: clip-path var(--anim-speed) cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        /* Classe ativada por JS para iniciar o crescimento da linha */
+        .path-line.animate-fill::after {
+            clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%);
+        }
+
+        /* Se já estava completada antes, já renderiza cheia */
+        .path-line.static-completed::after {
+            clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%);
+        }
+        
+        /* MATEMÁTICA DAS DIAGONAIS (Fixadas nos centros das bolinhas) */
+        .line-left-to-center::before, .line-left-to-center::after {
+            height: 150px; transform: translate(-50%, -50%) translateX(-40px) rotate(-32.6deg);
+        }
+        .line-center-to-right::before, .line-center-to-right::after {
+            height: 150px; transform: translate(-50%, -50%) translateX(40px) rotate(-32.6deg);
+        }
+        .line-right-to-left::before, .line-right-to-left::after {
+            height: 204px; transform: translate(-50%, -50%) translateX(0px) rotate(52deg);
+        }
+
+        /* ESTILO DOS BOTÕES (NODES) */
         .path-node {
             width: 75px;
             height: 75px;
@@ -51,33 +113,37 @@
             font-size: 24px;
             font-weight: 800;
             text-decoration: none;
-            transition: transform 0.2s, box-shadow 0.2s;
+            transition: transform 0.2s, box-shadow 0.2s, background 0.3s, border-color 0.3s;
             border: 4px solid transparent;
         }
-        .path-node:hover {
+        
+        .node-completed { background: #22c55e; color: white; border-color: #4ade80; box-shadow: 0 6px 0 #16a34a; }
+        .node-available { background: var(--accent, #0ea5e9); color: white; border-color: #7dd3fc; box-shadow: 0 6px 0 #0284c7; }
+        .node-locked { background: #334155; color: #94a3b8; cursor: not-allowed; box-shadow: 0 6px 0 #1e293b; }
+
+        .path-node:not(.node-locked):hover {
             transform: scale(1.08);
             text-decoration: none;
         }
-        
-        /* CORREÇÃO: Unidade Concluída em Verde com efeito 3D profisional */
-        .node-completed { 
-            background: #22c55e; 
-            color: white; 
-            border-color: #4ade80; 
-            box-shadow: 0 6px 0 #16a34a; 
+
+        /* EFEITO DE POP/BOUNCE QUANDO DESBLOQUEIA */
+        @keyframes unlockBounce {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.25); box-shadow: 0 10px 15px rgba(14, 165, 233, 0.4); }
+            100% { transform: scale(1); }
         }
-        
-        .node-available { background: var(--accent); color: white; border-color: #7dd3fc; box-shadow: 0 6px 0 #0284c7; }
-        .node-locked { background: #334155; color: #94a3b8; cursor: not-allowed; box-shadow: 0 6px 0 #1e293b; }
-        .node-locked:hover { transform: none; }
-        
-        .unit-title {
-            margin-top: 8px;
-            font-size: 14px;
-            font-weight: 600;
-            color: var(--text-muted);
-            max-width: 140px;
-            text-align: center;
+        .animate-unlock {
+            animation: unlockBounce 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        }
+
+        /* POP NO CHECK DA CONCLUÍDA */
+        @keyframes checkPop {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.15); }
+            100% { transform: scale(1); }
+        }
+        .animate-check {
+            animation: checkPop 0.5s ease-in-out;
         }
     </style>
 </head>
@@ -92,28 +158,83 @@
 
         <div class="path-container">
             {% for unit in units %}
-                <div class="path-node-wrapper {% if loop.index % 3 == 1 %}node-left{% elif loop.index % 3 == 0 %}node-right{% endif %}">
+                <div class="path-node-wrapper {% if loop.index % 3 == 1 %}node-left{% elif loop.index % 3 == 0 %}node-right{% else %}node-center{% endif %}">
                     
                     {% if unit.status == 'completed' %}
-                        <a href="/unidade/{{ unit.id }}" class="path-node node-completed">✔️</a>
+                        <a href="/unidade/{{ unit.id }}" id="node-{{ unit.id }}" class="path-node node-completed" data-status="completed">✔️</a>
                     {% elif unit.status == 'available' %}
-                        <a href="/unidade/{{ unit.id }}" class="path-node node-available">{{ unit.order }}</a>
+                        <a href="/unidade/{{ unit.id }}" id="node-{{ unit.id }}" class="path-node node-available" data-status="available">{{ unit.order }}</a>
                     {% else %}
-                        <div class="path-node node-locked">{{ unit.order }}</div>
+                        <div id="node-{{ unit.id }}" class="path-node node-locked" data-status="locked" data-href="/unidade/{{ unit.id }}" data-order="{{ unit.order }}">{{ unit.order }}</div>
                     {% endif %}
                     
                     <div class="unit-title">{{ unit.title }}</div>
                 </div>
 
                 {% if not loop.last %}
-                    <div class="path-line 
-                        {% if unit.status == 'completed' %}completed{% endif %}
-                        {% if loop.index % 3 == 1 %}line-to-right{% elif loop.index % 3 == 0 %}line-to-left{% endif %}">
+                    <div id="line-from-{{ unit.id }}" 
+                         class="path-line 
+                         {% if unit.status == 'completed' and units[loop.index].status == 'completed' %}static-completed{% endif %}
+                         {% if loop.index % 3 == 1 %}line-left-to-center{% elif loop.index % 3 == 2 %}line-center-to-right{% else %}line-right-to-left{% endif %}">
                     </div>
                 {% endif %}
             {% endfor %}
         </div>
     </div>
 
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            // Simulador/Capturador da última unidade completada. 
+            // Para produção, salve no localStorage antes de redirecionar de dentro do quiz:
+            // Exemplo no fim do seu arquivo de quiz: localStorage.setItem('last_completed_id', id_da_unidade);
+            const lastCompletedId = localStorage.getItem('last_completed_id');
+            
+            if (lastCompletedId) {
+                const nodeAtual = document.getElementById(`node-${lastCompletedId}`);
+                const linhaConexao = document.getElementById(`line-from-${lastCompletedId}`);
+                
+                if (nodeAtual) {
+                    // 1. Pulsa a unidade recém-feita
+                    nodeAtual.classList.add('animate-check');
+                    
+                    // Se houver uma linha saindo dela para um próximo nó
+                    if (linhaConexao) {
+                        setTimeout(() => {
+                            // 2. Faz o cano verde crescer deslizando
+                            linhaConexao.classList.add('animate-fill');
+                            
+                            // Encontra quem é o próximo elemento da árvore
+                            const proximoWrapper = linhaConexao.nextElementSibling;
+                            if (proximoWrapper) {
+                                const proximoNode = proximoWrapper.querySelector('.path-node');
+                                
+                                // 3. Quando a linha terminar de encher, ativa o próximo nó
+                                setTimeout(() => {
+                                    if (proximoNode && proximoNode.classList.contains('node-locked')) {
+                                        // Transforma de Cinza (Bloqueado) para Azul (Disponível)
+                                        proximoNode.classList.remove('node-locked');
+                                        proximoNode.classList.add('node-available', 'animate-unlock');
+                                        proximoNode.setAttribute('data-status', 'available');
+                                        
+                                        // Transforma a Div estática em um link clicável real
+                                        const linkUrl = proximoNode.getAttribute('data-href');
+                                        const novaAncora = document.createElement('a');
+                                        novaAncora.href = linkUrl;
+                                        novaAncora.id = proximoNode.id;
+                                        novaAncora.className = proximoNode.className;
+                                        novaAncora.textContent = proximoNode.getAttribute('data-order');
+                                        novaAncora.setAttribute('data-status', 'available');
+                                        
+                                        proximoNode.parentNode.replaceChild(novaAncora, proximoNode);
+                                    }
+                                }, 800); // Tempo exato casado com a velocidade --anim-speed do CSS
+                        }, 600);
+                    }
+                }
+                // Limpa o gatilho para não rodar em loop toda vez que der refresh à toa
+                localStorage.removeItem('last_completed_id');
+            }
+        });
+    </script>
 </body>
 </html>
