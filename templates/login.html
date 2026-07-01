@@ -6,6 +6,33 @@
     <title>Login - CodeQuest</title>
     <link rel="icon" type="image/png" href="/static/logo2.png">
     <link rel="stylesheet" href="/static/style.css">
+    <style>
+        /* 💬 BOTÃO FLUTUANTE DE FEEDBACK FIXO NO CANTO INFERIOR DIREITO */
+        .feedback-float-btn {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            background: linear-gradient(135deg, #a855f7, #7c3aed); /* Tom roxo/neon vivo */
+            color: #ffffff;
+            padding: 12px 20px;
+            border-radius: 50px;
+            font-weight: 700;
+            font-size: 14px;
+            text-decoration: none;
+            box-shadow: 0 4px 14px rgba(124, 58, 237, 0.4);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            z-index: 9999;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .feedback-float-btn:hover {
+            transform: scale(1.05) translateY(-2px);
+            box-shadow: 0 6px 20px rgba(124, 58, 237, 0.6);
+            color: #ffffff;
+        }
+    </style>
 </head>
 <body>
 
@@ -41,6 +68,10 @@
             <a href="/register">Ainda não tem conta? Criar conta</a>
         </p>
     </div>
+
+    <a href="https://forms.gle/McVT3E7VctU3iFdGA" target="_blank" class="feedback-float-btn">
+        💬 Feedback
+    </a>
 
 </body>
 </html>
