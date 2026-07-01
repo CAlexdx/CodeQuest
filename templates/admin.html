@@ -72,7 +72,6 @@
         <h1>🛡️ Painel Administrativo</h1>
         <a href="/" style="font-size:13px; display:inline-block; margin: 8px 0 24px;">⬅ Voltar ao Início</a>
 
-        <!-- USUÁRIOS -->
         <div class="card-admin">
             <h2>👥 Usuários ({{ users | length }})</h2>
             <div style="overflow-x: auto;">
@@ -107,9 +106,9 @@
                                     <a href="/admin/toggle_admin/{{ u[0] }}" class="btn-sm btn-toggle">
                                         {{ "Rebaixar" if u[3] else "Promover" }}
                                     </a>
-                                    <a href="/admin/delete_user/{{ u[0] }}"
+                                    <a href="#" 
                                        class="btn-sm btn-del"
-                                       onclick="return confirm('Deletar o usuário {{ u[1] }}? Esta ação não pode ser desfeita.')">
+                                       onclick="banirComRazao(event, '{{ u[0] }}', '{{ u[1] }}', '/admin/delete_user/{{ u[0] }}')">
                                         Excluir
                                     </a>
                                 </div>
@@ -121,7 +120,6 @@
             </div>
         </div>
 
-        <!-- QUESTÕES -->
         <div class="card-admin">
             <h2>📚 Banco de Questões ({{ questions | length }} no total)</h2>
             <div style="overflow-x: auto;">
@@ -156,6 +154,28 @@
         </div>
 
     </div>
+
+    <script>
+    function banirComRazao(event, userId, username, deleteUrl) {
+        event.preventDefault(); // Impede o link de navegar sozinho antes da hora
+
+        // 1. Pede o motivo do banimento na tela
+        let razao = prompt(`Digite a razão do banimento para o usuário "${username}":`);
+        
+        if (razao === null) return; // Se clicou em cancelar, interrompe
+        
+        if (razao.trim() === "") {
+            alert("Você precisa digitar um motivo para banir!");
+            return;
+        }
+
+        // 2. Avisa sobre a criação de uma nova conta
+        alert(`O usuário "${username}" será removido.\nMotivo registrado: ${razao}\nEle precisará criar uma nova conta caso queira acessar a plataforma.`);
+
+        // 3. Redireciona para a sua rota padrão de exclusão para efetivar a remoção do ranking/banco
+        window.location.href = deleteUrl;
+    }
+    </script>
 
 </body>
 </html>
