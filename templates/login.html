@@ -1,18 +1,26 @@
 <!DOCTYPE html>
-<html lang="pt-br">
+<html lang="pt-br" data-theme="dark">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login - CodeQuest</title>
     <link rel="icon" type="image/png" href="/static/logo2.png">
     <link rel="stylesheet" href="/static/style.css">
+
+    <!-- Preservação do Tema Selecionado pelo Usuário -->
+    <script>
+        (function() {
+            const savedTheme = localStorage.getItem('codequest_theme') || 'dark';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+        })();
+    </script>
+
     <style>
-        /* 💬 BOTÃO FLUTUANTE DE FEEDBACK FIXO NO CANTO INFERIOR DIREITO */
         .feedback-float-btn {
             position: fixed;
             bottom: 24px;
             right: 24px;
-            background: linear-gradient(135deg, #a855f7, #7c3aed); /* Tom roxo/neon vivo */
+            background: linear-gradient(135deg, #a855f7, #7c3aed);
             color: #ffffff;
             padding: 12px 20px;
             border-radius: 50px;
@@ -31,18 +39,33 @@
             transform: scale(1.05) translateY(-2px);
             box-shadow: 0 6px 20px rgba(124, 58, 237, 0.6);
             color: #ffffff;
+            text-decoration: none;
+        }
+
+        /* Rótulos acessíveis para leitores de tela */
+        .sr-only {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+            clip: rect(0, 0, 0, 0);
+            white-space: nowrap;
+            border: 0;
         }
     </style>
 </head>
 <body>
 
     <div class="quiz">
-        
         <img src="/static/logo1.png" alt="CodeQuest Logo" style="max-width: 180px; height: auto; display: block; margin: 0 auto 10px;">
         <p style="margin-bottom: 24px; font-size: 14px;">Entre na sua conta para continuar</p>
 
         <form method="POST">
-            <input name="username"
+            <label for="username_input" class="sr-only">Nome de Usuário</label>
+            <input id="username_input"
+                   name="username"
                    type="text"
                    placeholder="Usuário"
                    maxlength="15"
@@ -50,7 +73,9 @@
                    autocomplete="username"
                    autofocus>
 
-            <input name="password"
+            <label for="password_input" class="sr-only">Senha</label>
+            <input id="password_input"
+                   name="password"
                    type="password"
                    placeholder="Senha"
                    maxlength="20"
@@ -69,7 +94,7 @@
         </p>
     </div>
 
-    <a href="https://forms.gle/McVT3E7VctU3iFdGA" target="_blank" class="feedback-float-btn">
+    <a href="https://forms.gle/McVT3E7VctU3iFdGA" target="_blank" class="feedback-float-btn" aria-label="Enviar Feedback sobre a plataforma">
         💬 Feedback
     </a>
 

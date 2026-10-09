@@ -1,12 +1,18 @@
 <!DOCTYPE html>
-<html lang="pt-br">
+<html lang="pt-br" data-theme="dark">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ unit.title }}</title>
+    <title>{{ unit.title }} - CodeQuest</title>
     <link rel="stylesheet" href="/static/style.css">
     <link rel="icon" type="image/png" href="/static/logo2.png">
     
+    <script>
+        (function() {
+            const savedTheme = localStorage.getItem('codequest_theme') || 'dark';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+        })();
+    </script>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
 </head>
 <body>
@@ -15,15 +21,15 @@
 
     <h1>{{ unit.title }}</h1>
 
-    <p class="intro-text">
+    <p class="intro-text" style="margin-bottom: 20px;">
         {{ unit.intro_text or unit.intro }}
     </p>
 
     {% if unit_finished %}
 
-    <div class="success-box">
-        <h2>🎉 Unidade concluída!</h2>
-        <p>Você completou todas as perguntas desta unidade.</p>
+    <div class="success-box" style="padding: 20px 0;">
+        <h2>🎉 Unidade Concluída!</h2>
+        <p style="margin-bottom: 20px;">Você completou todas as perguntas desta unidade com sucesso.</p>
         <a href="/trilhas/{{ unit.trail_id }}" class="btn-jogar">
             Voltar para Trilha
         </a>
@@ -32,16 +38,13 @@
     <script>
         localStorage.setItem('last_completed_id', "{{ unit.id }}");
 
-        // Função para soltar rajadas de confete da esquerda e da direita
         function lancarConfetes() {
-            // Rajada da Esquerda
             confetti({
                 particleCount: 80,
                 angle: 60,
                 spread: 70,
                 origin: { x: 0, y: 0.8 }
             });
-            // Rajada da Direita
             confetti({
                 particleCount: 80,
                 angle: 120,
@@ -50,16 +53,13 @@
             });
         }
 
-        // Dispara imediatamente ao carregar a tela de sucesso
         lancarConfetes();
-        
-        // Dá uma segunda rajada após 500ms para um efeito mais encorpado
         setTimeout(lancarConfetes, 500);
     </script>
 
     {% elif question %}
 
-    <h2>{{ question.question }}</h2>
+    <h2 style="margin-bottom: 24px;">{{ question.question }}</h2>
 
     <div id="area-resposta">
 
@@ -77,7 +77,9 @@
         <input 
             type="text" 
             id="resposta" 
-            placeholder="Digite sua resposta">
+            placeholder="Digite sua resposta"
+            aria-label="Campo para resposta da questão"
+            autocomplete="off">
         <button onclick="enviar()">
             Responder
         </button>

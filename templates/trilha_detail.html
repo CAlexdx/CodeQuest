@@ -1,14 +1,22 @@
 <!DOCTYPE html>
-<html lang="pt-br">
+<html lang="pt-br" data-theme="dark">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{ trail.name }} - CodeQuest</title>
     <link rel="stylesheet" href="/static/style.css">
     <link rel="icon" type="image/png" href="/static/logo2.png">
+
+    <script>
+        (function() {
+            const savedTheme = localStorage.getItem('codequest_theme') || 'dark';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+        })();
+    </script>
+
     <style>
         :root {
-            --anim-speed: 0.8s; /* Velocidade do preenchimento da linha */
+            --anim-speed: 0.8s;
         }
 
         .path-container {
@@ -39,13 +47,12 @@
             width: 150px;
             font-size: 14px;
             font-weight: 600;
-            color: #94a3b8;
+            color: var(--text-muted);
             text-align: center;
             line-height: 1.3;
             pointer-events: none;
         }
 
-        /* CONTAINER DA LINHA */
         .path-line {
             height: 50px; 
             width: 10px;
@@ -53,7 +60,6 @@
             z-index: 1;
         }
         
-        /* O fundo cinza da linha (cano base) */
         .path-line::before {
             content: '';
             position: absolute;
@@ -61,11 +67,10 @@
             left: 50%;
             width: 12px;
             border-radius: 6px;
-            background: #334155;
+            background: var(--border);
             transform-origin: center center;
         }
 
-        /* ANIMAÇÃO DUOLINGO: A linha verde que cresce por cima do cano cinza */
         .path-line::after {
             content: '';
             position: absolute;
@@ -73,25 +78,17 @@
             left: 50%;
             width: 12px;
             border-radius: 6px;
-            background: #22c55e;
+            background: var(--green);
             transform-origin: center center;
-            
-            /* Começa invisível (cortada no topo) */
             clip-path: polygon(0 0, 100% 0, 100% 0, 0 0);
             transition: clip-path var(--anim-speed) cubic-bezier(0.4, 0, 0.2, 1);
         }
         
-        /* Classe ativada por JS para iniciar o crescimento da linha */
-        .path-line.animate-fill::after {
-            clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%);
-        }
-
-        /* Se já estava completada antes, já renderiza cheia */
+        .path-line.animate-fill::after,
         .path-line.static-completed::after {
             clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%);
         }
         
-        /* MATEMÁTICA DAS DIAGONAIS (Fixadas nos centros das bolinhas) */
         .line-left-to-center::before, .line-left-to-center::after {
             height: 150px; transform: translate(-50%, -50%) translateX(-40px) rotate(-32.6deg);
         }
@@ -102,7 +99,6 @@
             height: 204px; transform: translate(-50%, -50%) translateX(0px) rotate(52deg);
         }
 
-        /* ESTILO DOS BOTÕES (NODES) */
         .path-node {
             width: 75px;
             height: 75px;
@@ -117,16 +113,15 @@
             border: 4px solid transparent;
         }
         
-        .node-completed { background: #22c55e; color: white; border-color: #4ade80; box-shadow: 0 6px 0 #16a34a; }
-        .node-available { background: var(--accent, #0ea5e9); color: white; border-color: #7dd3fc; box-shadow: 0 6px 0 #0284c7; }
-        .node-locked { background: #334155; color: #94a3b8; cursor: not-allowed; box-shadow: 0 6px 0 #1e293b; }
+        .node-completed { background: var(--green); color: #ffffff; border-color: #4ade80; box-shadow: 0 6px 0 var(--green-hover); }
+        .node-available { background: var(--blue); color: #ffffff; border-color: #7dd3fc; box-shadow: 0 6px 0 var(--blue-hover); }
+        .node-locked { background: var(--border); color: var(--text-muted); cursor: not-allowed; box-shadow: 0 6px 0 var(--bg-deep); }
 
         .path-node:not(.node-locked):hover {
             transform: scale(1.08);
             text-decoration: none;
         }
 
-        /* EFEITO DE POP/BOUNCE QUANDO DESBLOQUEIA */
         @keyframes unlockBounce {
             0% { transform: scale(1); }
             50% { transform: scale(1.25); box-shadow: 0 10px 15px rgba(14, 165, 233, 0.4); }
@@ -136,7 +131,6 @@
             animation: unlockBounce 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
         }
 
-        /* POP NO CHECK DA CONCLUÍDA */
         @keyframes checkPop {
             0% { transform: scale(1); }
             50% { transform: scale(1.15); }
@@ -161,11 +155,11 @@
                 <div class="path-node-wrapper {% if loop.index % 3 == 1 %}node-left{% elif loop.index % 3 == 0 %}node-right{% else %}node-center{% endif %}">
                     
                     {% if unit.status == 'completed' %}
-                        <a href="/unidade/{{ unit.id }}" id="node-{{ unit.id }}" class="path-node node-completed" data-status="completed">✔️</a>
+                        <a href="/unidade/{{ unit.id }}" id="node-{{ unit.id }}" class="path-node node-completed" data-status="completed" aria-label="Unidade {{ unit.order }} Concluída">✔️</a>
                     {% elif unit.status == 'available' %}
-                        <a href="/unidade/{{ unit.id }}" id="node-{{ unit.id }}" class="path-node node-available" data-status="available">{{ unit.order }}</a>
+                        <a href="/unidade/{{ unit.id }}" id="node-{{ unit.id }}" class="path-node node-available" data-status="available" aria-label="Acessar Unidade {{ unit.order }}">{{ unit.order }}</a>
                     {% else %}
-                        <div id="node-{{ unit.id }}" class="path-node node-locked" data-status="locked" data-href="/unidade/{{ unit.id }}" data-order="{{ unit.order }}">{{ unit.order }}</div>
+                        <div id="node-{{ unit.id }}" class="path-node node-locked" data-status="locked" data-href="/unidade/{{ unit.id }}" data-order="{{ unit.order }}" aria-label="Unidade {{ unit.order }} Bloqueada">{{ unit.order }}</div>
                     {% endif %}
                     
                     <div class="unit-title">{{ unit.title }}</div>
@@ -184,9 +178,6 @@
 
     <script>
         document.addEventListener("DOMContentLoaded", () => {
-            // Simulador/Capturador da última unidade completada. 
-            // Para produção, salve no localStorage antes de redirecionar de dentro do quiz:
-            // Exemplo no fim do seu arquivo de quiz: localStorage.setItem('last_completed_id', id_da_unidade);
             const lastCompletedId = localStorage.getItem('last_completed_id');
             
             if (lastCompletedId) {
@@ -194,29 +185,22 @@
                 const linhaConexao = document.getElementById(`line-from-${lastCompletedId}`);
                 
                 if (nodeAtual) {
-                    // 1. Pulsa a unidade recém-feita
                     nodeAtual.classList.add('animate-check');
                     
-                    // Se houver uma linha saindo dela para um próximo nó
                     if (linhaConexao) {
                         setTimeout(() => {
-                            // 2. Faz o cano verde crescer deslizando
                             linhaConexao.classList.add('animate-fill');
                             
-                            // Encontra quem é o próximo elemento da árvore
                             const proximoWrapper = linhaConexao.nextElementSibling;
                             if (proximoWrapper) {
                                 const proximoNode = proximoWrapper.querySelector('.path-node');
                                 
-                                // 3. Quando a linha terminar de encher, ativa o próximo nó
                                 setTimeout(() => {
                                     if (proximoNode && proximoNode.classList.contains('node-locked')) {
-                                        // Transforma de Cinza (Bloqueado) para Azul (Disponível)
                                         proximoNode.classList.remove('node-locked');
                                         proximoNode.classList.add('node-available', 'animate-unlock');
                                         proximoNode.setAttribute('data-status', 'available');
                                         
-                                        // Transforma a Div estática em um link clicável real
                                         const linkUrl = proximoNode.getAttribute('data-href');
                                         const novaAncora = document.createElement('a');
                                         novaAncora.href = linkUrl;
@@ -227,11 +211,11 @@
                                         
                                         proximoNode.parentNode.replaceChild(novaAncora, proximoNode);
                                     }
-                                }, 800); // Tempo exato casado com a velocidade --anim-speed do CSS
+                                }, 800);
+                            }
                         }, 600);
                     }
                 }
-                // Limpa o gatilho para não rodar em loop toda vez que der refresh à toa
                 localStorage.removeItem('last_completed_id');
             }
         });

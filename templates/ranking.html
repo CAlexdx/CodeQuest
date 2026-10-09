@@ -1,17 +1,20 @@
 <!DOCTYPE html>
-<html lang="pt-br">
+<html lang="pt-br" data-theme="dark">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>🏆 Ranking Global</title>
+    <title>🏆 Ranking Global - CodeQuest</title>
     <link rel="stylesheet" href="/static/style.css">
     <link rel="icon" type="image/png" href="/static/logo2.png">
+
+    <script>
+        (function() {
+            const savedTheme = localStorage.getItem('codequest_theme') || 'dark';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+        })();
+    </script>
     
     <style>
-        /* ==========================================================================
-           ADAPTAÇÃO DO RANKING PARA AS SUAS VARIÁVEIS NATIVAS
-           ========================================================================== */
-        
         h1.ranking-title {
             text-align: center;
             font-size: 32px;
@@ -20,7 +23,6 @@
             color: var(--text-primary);
         }
 
-        /* Container Principal Split (Lista na Esquerda, Pódio na Direita) */
         .ranking-main-wrapper {
             display: flex;
             flex-direction: row;
@@ -30,9 +32,6 @@
             align-items: flex-start;
         }
 
-        /* --------------------------------------------------------------------------
-           LADO ESQUERDO: LISTA DOS DEMAIS COLOCADOS (4º LUGAR+)
-           -------------------------------------------------------------------------- */
         .leaderboard-side {
             flex: 1;
             background: var(--bg-card);
@@ -102,9 +101,6 @@
             font-weight: 600;
         }
 
-        /* --------------------------------------------------------------------------
-           DIREITA: PÓDIO ESTILO KAHOOT (TOP 3) - CORES UNIFICADAS E REFINADAS
-           -------------------------------------------------------------------------- */
         .podium-side {
             flex: 1.2;
             display: flex;
@@ -127,7 +123,6 @@
             margin-top: auto;
         }
 
-        /* Colunas do Pódio */
         .podium-column {
             display: flex;
             flex-direction: column;
@@ -136,7 +131,6 @@
             position: relative;
         }
 
-        /* Blocos Sólidos do Pódio - Base Roxa Unificada */
         .podium-block {
             width: 100%;
             border-top-left-radius: var(--radius-md);
@@ -146,11 +140,10 @@
             align-items: center;
             justify-content: center;
             position: relative;
-            background: linear-gradient(135deg, #2e1065, #1e1b4b); /* Roxo profundo unificado Kahoot */
+            background: linear-gradient(135deg, #2e1065, #1e1b4b);
             border-bottom: none !important;
         }
 
-        /* Dados do Usuário acima do bloco */
         .podium-user-info {
             text-align: center;
             margin-bottom: 12px;
@@ -172,7 +165,6 @@
             color: var(--text-muted);
         }
 
-        /* Emblemas de Numeração */
         .podium-badge {
             width: 42px;
             height: 42px;
@@ -187,15 +179,10 @@
             margin-bottom: 8px;
         }
 
-        /* ==========================================
-           CUSTOMIZAÇÃO INDIVIDUAL POR METAL (BORDAS E LUZES)
-           ========================================== */
-
-        /* 1º Lugar (Centro - Ouro) */
         .podium-column.first .podium-block {
             height: 190px;
-            border: 2px solid #eab308; /* Borda Ouro */
-            box-shadow: inset 0 0 15px rgba(234, 179, 8, 0.15); /* Brilho interno dourado */
+            border: 2px solid #eab308;
+            box-shadow: inset 0 0 15px rgba(234, 179, 8, 0.15);
         }
         .podium-column.first .podium-badge {
             background: #eab308;
@@ -203,15 +190,14 @@
             color: #78350f;
         }
         .podium-column.first .podium-username {
-            color: #fde047; /* Nick em destaque dourado */
+            color: #fde047;
             font-size: 17px;
         }
 
-        /* 2º Lugar (Esquerda - Prata) */
         .podium-column.second .podium-block {
             height: 130px;
-            border: 2px solid #9ca3af; /* Borda Prata */
-            box-shadow: inset 0 0 15px rgba(156, 163, 175, 0.15); /* Brilho interno prateado */
+            border: 2px solid #9ca3af;
+            box-shadow: inset 0 0 15px rgba(156, 163, 175, 0.15);
         }
         .podium-column.second .podium-badge {
             background: #9ca3af;
@@ -222,11 +208,10 @@
             color: #e5e7eb;
         }
 
-        /* 3º Lugar (Direita - Bronze) */
         .podium-column.third .podium-block {
             height: 95px;
-            border: 2px solid #cd7f32; /* Borda Bronze */
-            box-shadow: inset 0 0 15px rgba(205, 127, 50, 0.15); /* Brilho interno bronze */
+            border: 2px solid #cd7f32;
+            box-shadow: inset 0 0 15px rgba(205, 127, 50, 0.15);
         }
         .podium-column.third .podium-badge {
             background: #cd7f32;
@@ -247,7 +232,6 @@
             border-radius: 6px;
         }
 
-        /* Responsividade para manter o app limpo em telas menores */
         @media (max-width: 850px) {
             .ranking-main-wrapper {
                 flex-direction: column;
@@ -256,7 +240,7 @@
                 width: 100%;
             }
             .podium-side {
-                order: -1; /* Joga o pódio para o topo em telas mobile */
+                order: -1;
             }
         }
     </style>
@@ -276,10 +260,10 @@
             <table class="ranking-table">
                 <thead>
                     <tr>
-                        <th>#</th>
-                        <th>Usuário</th>
-                        <th>XP</th>
-                        <th>Nível</th>
+                        <th scope="col">#</th>
+                        <th scope="col">Usuário</th>
+                        <th scope="col">XP</th>
+                        <th scope="col">Nível</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -351,7 +335,7 @@
     </div>
 
     <div style="text-align: center; margin-top: 32px;">
-        <a href="/" class="btn-jogar" style="text-decoration: none; display: inline-block;">
+        <a href="/" class="btn-jogar" style="text-decoration: none; display: inline-block; max-width: 240px;">
             ⬅ Voltar ao Início
         </a>
     </div>

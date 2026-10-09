@@ -1,18 +1,26 @@
 <!DOCTYPE html>
-<html lang="pt-br">
+<html lang="pt-br" data-theme="dark">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Trilhas - CodeQuest</title>
+    <title>Trilhas de Aprendizagem - CodeQuest</title>
     <link rel="stylesheet" href="/static/style.css">
     <link rel="icon" type="image/png" href="/static/logo2.png">
+
+    <!-- Script de Persistência de Tema -->
+    <script>
+        (function() {
+            const savedTheme = localStorage.getItem('codequest_theme') || 'dark';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+        })();
+    </script>
 </head>
 <body>
 
     <div class="quiz" style="max-width: 640px;">
         <header>
             <h1>Trilhas de Aprendizagem</h1>
-            <a href="/">⬅ Voltar para o Início</a>
+            <a href="/" aria-label="Voltar para a página inicial">⬅ Voltar para o Início</a>
         </header>
 
         {% for trail in trails %}
@@ -21,17 +29,21 @@
             <p>{{ trail.description }}</p>
             
             <p style="font-size: 14px; margin-top: 10px;">
-                {{ trail.completed_units }}/{{ trail.total_units }} unidades
+                <strong>{{ trail.completed_units }}/{{ trail.total_units }}</strong> unidades concluídas
             </p>
 
             <div class="progress-container">
                 <div class="progress-bar" 
-                     style="width: {{ (trail.completed_units / trail.total_units * 100)|int if trail.total_units else 0 }}%;">
+                     style="width: {{ (trail.completed_units / trail.total_units * 100)|int if trail.total_units else 0 }}%;"
+                     role="progressbar"
+                     aria-valuenow="{{ trail.completed_units }}"
+                     aria-valuemin="0"
+                     aria-valuemax="{{ trail.total_units }}">
                 </div>
             </div>
 
             <div class="btn-container">
-                <a href="/trilhas/{{ trail.id }}" class="btn-jogar">Entrar</a>
+                <a href="/trilhas/{{ trail.id }}" class="btn-jogar">Acessar Trilha</a>
             </div>
         </div>
         {% endfor %}

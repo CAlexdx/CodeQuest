@@ -1,57 +1,103 @@
 <!DOCTYPE html>
-<html lang="pt-br">
+<html lang="pt-br" data-theme="dark">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Perfil</title>
-<link rel="stylesheet" href="/static/style.css">
-<link rel="icon" type="image/png" href="/static/logo2.png">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cadastro - CodeQuest</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <link rel="icon" type="image/png" href="/static/logo2.png">
+
+    <script>
+        (function() {
+            const savedTheme = localStorage.getItem('codequest_theme') || 'dark';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+        })();
+    </script>
+
+    <style>
+        .feedback-float-btn {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            background: linear-gradient(135deg, #a855f7, #7c3aed);
+            color: #ffffff;
+            padding: 12px 20px;
+            border-radius: 50px;
+            font-weight: 700;
+            font-size: 14px;
+            text-decoration: none;
+            box-shadow: 0 4px 14px rgba(124, 58, 237, 0.4);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            z-index: 9999;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .feedback-float-btn:hover {
+            transform: scale(1.05) translateY(-2px);
+            box-shadow: 0 6px 20px rgba(124, 58, 237, 0.6);
+            color: #ffffff;
+            text-decoration: none;
+        }
+
+        .sr-only {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+            clip: rect(0, 0, 0, 0);
+            white-space: nowrap;
+            border: 0;
+        }
+    </style>
 </head>
 <body>
 
-<div class="quiz">
+    <div class="quiz">
+        <img src="/static/logo1.png" alt="CodeQuest Logo" style="max-width: 180px; height: auto; display: block; margin: 0 auto 10px;">
+        <p style="margin-bottom: 24px; font-size: 14px;">Crie sua conta gratuita</p>
 
-<h1> Perfil</h1>
+        <form method="POST">
+            <label for="reg_username" class="sr-only">Escolha um Nome de Usuário</label>
+            <input id="reg_username"
+                   name="username"
+                   type="text"
+                   placeholder="Usuário (máx. 15 caracteres)"
+                   maxlength="15"
+                   required
+                   pattern="[a-zA-Z0-9]+"
+                   title="Apenas letras e números, sem espaços."
+                   autocomplete="username"
+                   autofocus>
 
-<div class="perfil-info">
+            <label for="reg_password" class="sr-only">Escolha uma Senha</label>
+            <input id="reg_password"
+                   name="password"
+                   type="password"
+                   placeholder="Senha (mín. 4 caracteres)"
+                   maxlength="20"
+                   minlength="4"
+                   required
+                   autocomplete="new-password">
 
-<p> {{ username }}</p>
+            <button type="submit">Criar Conta</button>
+        </form>
 
-<p> {{ xp }} XP</p>
+        {% if error %}
+            <p class="error-msg">{{ error }}</p>
+        {% endif %}
 
-<p> Nível {{ level }}</p>
+        <p style="margin-top: 24px; font-size: 14px;">
+            <a href="/login">Já tem uma conta? Entrar</a>
+        </p>
+    </div>
 
-<p>🔥 Streak: {{ streak }} dias</p>
-
-</div>
-
-<div class="progress-container">
-<div class="progress-bar"
-style="width: {{ ((xp % 50) / 50 * 100)|int }}%;">
-</div>
-</div>
-
-<p>
-{{ xp % 50 }}/50 XP para o próximo nível
-</p>
-
-<div class="btn-container">
-
-<a href="/trilhas" class="btn-jogar">
- Trilhas
-</a>
-
-<a href="/ranking" class="btn-jogar">
-🏆 Ranking
-</a>
-
-<a href="/" class="btn-jogar">
- Home
-</a>
-
-</div>
-
-</div>
+    <a href="https://forms.gle/McVT3E7VctU3iFdGA" target="_blank" class="feedback-float-btn" aria-label="Enviar Feedback sobre a plataforma">
+        💬 Feedback
+    </a>
 
 </body>
 </html>

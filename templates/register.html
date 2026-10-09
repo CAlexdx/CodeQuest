@@ -1,11 +1,32 @@
 <!DOCTYPE html>
-<html lang="pt-br">
+<html lang="pt-br" data-theme="dark">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Cadastro - CodeQuest</title>
     <link rel="stylesheet" href="/static/style.css">
     <link rel="icon" type="image/png" href="/static/logo2.png">
+
+    <script>
+        (function() {
+            const savedTheme = localStorage.getItem('codequest_theme') || 'dark';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+        })();
+    </script>
+
+    <style>
+        .sr-only {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+            clip: rect(0, 0, 0, 0);
+            white-space: nowrap;
+            border: 0;
+        }
+    </style>
 </head>
 <body>
 
@@ -14,7 +35,9 @@
         <p style="margin-bottom: 24px; font-size: 14px;">Crie sua conta gratuita</p>
 
         <form method="POST">
-            <input name="username"
+            <label for="reg_username" class="sr-only">Nome de Usuário</label>
+            <input id="reg_username"
+                   name="username"
                    type="text"
                    placeholder="Usuário (máx. 15 caracteres)"
                    maxlength="15"
@@ -24,7 +47,9 @@
                    autocomplete="username"
                    autofocus>
 
-            <input name="password"
+            <label for="reg_password" class="sr-only">Senha</label>
+            <input id="reg_password"
+                   name="password"
                    type="password"
                    placeholder="Senha (mín. 4 caracteres)"
                    maxlength="20"
