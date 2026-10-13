@@ -280,8 +280,8 @@
                 <p>Verifique suas estatísticas e configure os detalhes da sua conta.</p>
             </a>
 
-            <!-- 🧪 NOVO CARD: CODEQUEST LAB (Link direcionando para o ambiente de prática) -->
-            <a href="https://code-quest-lab.vercel.app" target="_blank" class="menu-card card-lab">
+            <!-- CODEQUEST LAB COM O USER_ID CORRETAMENTE REPASSADO -->
+            <a href="https://code-quest-lab.vercel.app/?user_id={{ session.get('user_id', '') }}" target="_blank" class="menu-card card-lab">
                 <div class="card-icon">🧪</div>
                 <h3>CodeQuest LAB</h3>
                 <p>Pratique código ao vivo no Sandbox, Bug Hunt OBI e Studio CSS.</p>
@@ -338,7 +338,6 @@
             applyTheme(newTheme);
         }
 
-        // Sincroniza o estado inicial do botão ao carregar
         document.addEventListener('DOMContentLoaded', () => {
             const currentTheme = document.documentElement.getAttribute('data-theme') || 'dark';
             applyTheme(currentTheme);

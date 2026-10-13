@@ -11,19 +11,19 @@ app = Flask(__name__)
 app.secret_key = os.environ.get("SECRET_KEY", "segredo_super_codequest")
 
 # ==========================
-# BANCO DE DADOS (SERVERLESS SAFE)
+# BANCO DE DADOS (SUPABASE / POSTGRES / SQLITE)
 # ==========================
 
 def get_db():
     db_url = os.environ.get("DATABASE_URL")
     if db_url:
         import psycopg2
-        # Conecta diretamente com o PostgreSQL do Supabase (use a URL com Pooler na porta 6543)
+        # Conecta diretamente com o PostgreSQL do Supabase via string de conexão do PowerShell
         return psycopg2.connect(db_url)
     return sqlite3.connect("database.db")
 
 def ph():
-    """Placeholder: %s para Postgres/Supabase, ? para SQLite local."""
+    """Placeholder: %s para Postgres/Supabase, ? para SQLite local[cite: 14]."""
     return "%s" if os.environ.get("DATABASE_URL") else "?"
 
 # ==========================
@@ -41,14 +41,14 @@ def get_difficulty(level):
     return 3
 
 def normalize(text):
-    """Remove acentos e coloca em minúsculas para comparação flexível."""
+    """Remove acentos e coloca em minúsculas para comparação flexível[cite: 14]."""
     return ''.join(
         c for c in unicodedata.normalize('NFD', text.lower().strip())
         if unicodedata.category(c) != 'Mn'
     )
 
 def get_current_user():
-    """Retorna (id, username, xp, is_admin) do usuário logado ou None."""
+    """Retorna (id, username, xp, is_admin) do usuário logado ou None[cite: 14]."""
     if "user_id" not in session:
         return None
     conn = get_db()
@@ -76,8 +76,27 @@ def require_admin():
         return redirect("/")
     return None
 
+def check_and_award_badge(user_id, badge_code):
+    """Concede uma conquista (badge) ao usuário se ele ainda não possuir."""
+    conn = get_db()
+    try:
+        cursor = conn.cursor()
+        p = ph()
+        cursor.execute(f"SELECT id FROM badges WHERE code={p}", (badge_code,))
+        b = cursor.fetchone()
+        if not b:
+            return
+        badge_id = b[0]
+
+        cursor.execute(f"SELECT 1 FROM user_badges WHERE user_id={p} AND badge_id={p}", (user_id, badge_id))
+        if not cursor.fetchone():
+            cursor.execute(f"INSERT INTO user_badges (user_id, badge_id) VALUES ({p}, {p})", (user_id, badge_id))
+            conn.commit()
+    finally:
+        conn.close()
+
 def update_streak(user_id):
-    """Atualiza o streak do usuário com base na data da última atividade."""
+    """Atualiza o streak do usuário com base na data da última atividade[cite: 14]."""
     conn = get_db()
     try:
         cursor = conn.cursor()
@@ -115,6 +134,9 @@ def update_streak(user_id):
             (streak, today_str, user_id)
         )
         conn.commit()
+
+        if streak >= 5:
+            check_and_award_badge(user_id, "ofensiva_5")
     finally:
         conn.close()
 
@@ -334,6 +356,21 @@ def unidade(unit_id):
                 )
                 conn.commit()
 
+                # Verifica se completou todas as unidades da trilha para conceder a badge de trilha
+                trail_id = unit[1]
+                cursor.execute(f"SELECT COUNT(*) FROM units WHERE trail_id={p}", (trail_id,))
+                total_t_units = cursor.fetchone()[0]
+                
+                cursor.execute(f"""
+                    SELECT COUNT(*) FROM unit_progress up
+                    JOIN units u ON up.unit_id = u.id
+                    WHERE u.trail_id={p} AND up.user_id={p} AND up.completed={p}
+                """, (trail_id, session["user_id"], True if os.environ.get("DATABASE_URL") else 1))
+                comp_t_units = cursor.fetchone()[0]
+
+                if total_t_units > 0 and comp_t_units >= total_t_units:
+                    check_and_award_badge(session["user_id"], "trilha_concluida")
+
         question_data = None
         if q:
             options_list = [opt for opt in [q[5], q[6], q[7], q[8]] if opt]
@@ -421,6 +458,7 @@ def login():
             if user and check_password_hash(user[1], password):
                 session["user_id"] = user[0]
                 update_streak(user[0])
+                check_and_award_badge(user[0], "primeiro_login") # Concede badge no primeiro login
                 return redirect("/")
             error = "Usuário ou senha incorretos."
 
@@ -602,6 +640,7 @@ def delete_user(user_id):
         p = ph()
         cursor.execute(f"DELETE FROM answered WHERE user_id={p}", (user_id,))
         cursor.execute(f"DELETE FROM unit_progress WHERE user_id={p}", (user_id,))
+        cursor.execute(f"DELETE FROM user_badges WHERE user_id={p}", (user_id,))
         cursor.execute(f"DELETE FROM users WHERE id={p}", (user_id,))
         conn.commit()
     finally:
@@ -630,13 +669,24 @@ def profile():
     conn = get_db()
     try:
         cursor = conn.cursor()
+        p = ph()
         cursor.execute(
-            f"SELECT username, xp, streak FROM users WHERE id={ph()}",
+            f"SELECT username, xp, streak FROM users WHERE id={p}",
             (session["user_id"],)
         )
         user = cursor.fetchone()
         if not user:
             return redirect("/logout")
+
+        # Busca as badges conquistadas para exibir no perfil
+        cursor.execute(f"""
+            SELECT b.name, b.description, b.icon, ub.earned_at 
+            FROM user_badges ub 
+            JOIN badges b ON ub.badge_id = b.id 
+            WHERE ub.user_id={p}
+        """, (session["user_id"],))
+        badges_rows = cursor.fetchall()
+        user_badges = [{"name": r[0], "description": r[1], "icon": r[2], "earned_at": r[3]} for r in badges_rows]
 
         return render_template(
             "profile.html",
@@ -644,6 +694,7 @@ def profile():
             xp=user[1],
             level=get_level(user[1]),
             streak=user[2] or 0,
+            badges=user_badges
         )
     finally:
         conn.close()

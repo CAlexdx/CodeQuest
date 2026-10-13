@@ -87,6 +87,26 @@ def init_db():
         )
     """)
 
+    # SISTEMA DE BADGES (CONQUISTAS)
+    cursor.execute(f"""
+        CREATE TABLE IF NOT EXISTS badges (
+            id {"SERIAL PRIMARY KEY" if is_pg else "INTEGER PRIMARY KEY AUTOINCREMENT"},
+            code TEXT UNIQUE NOT NULL,
+            name TEXT NOT NULL,
+            description TEXT NOT NULL,
+            icon TEXT NOT NULL
+        )
+    """)
+
+    cursor.execute(f"""
+        CREATE TABLE IF NOT EXISTS user_badges (
+            user_id INTEGER NOT NULL,
+            badge_id INTEGER NOT NULL,
+            earned_at TEXT DEFAULT CURRENT_TIMESTAMP,
+            PRIMARY KEY (user_id, badge_id)
+        )
+    """)
+
     # ADMIN PADRÃO
     cursor.execute(f"SELECT id FROM users WHERE username={p}", ("admin",))
     if not cursor.fetchone():
@@ -94,6 +114,17 @@ def init_db():
             f"INSERT INTO users (username, password, is_admin) VALUES ({p},{p},{p})",
             ("admin", generate_password_hash("admin123"), True)
         )
+
+    # POPULAR BADGES INICIAIS
+    cursor.execute("SELECT COUNT(*) FROM badges")
+    if cursor.fetchone()[0] == 0:
+        badges_iniciais = [
+            ("primeiro_login", "Primeiro Passo", "Realizou o primeiro acesso na plataforma CodeQuest.", "🚀"),
+            ("trilha_concluida", "Mestre das Trilhas", "Completou todas as unidades de uma trilha de aprendizado.", "🏆"),
+            ("ofensiva_5", "Chama Acesa", "Alcançou uma ofensiva de 5 dias seguidos.", "🔥")
+        ]
+        for b in badges_iniciais:
+            cursor.execute(f"INSERT INTO badges (code, name, description, icon) VALUES ({p},{p},{p},{p})", b)
 
     # POPULAR DADOS SE ESTIVER VAZIO
     cursor.execute("SELECT COUNT(*) FROM trails")
@@ -359,7 +390,7 @@ def _insert_data(cursor, p):
          "Aplicativos móveis guiam telas empilhando fluxos (Stack), chaveando abas inferiores (Tabs) ou gavetas laterais (Drawer).",
          [
              ("Qual navegação empilha telas permitindo que o usuário 'volte' deslizando?", "Stack", 2, "multiple", "Stack", "Tabs", "Drawer", "Switch"),
-             ("Menus que deslizam a partir das laterais da tela chamam-se...?", "Drawer", 2, "multiple", "Tab", "Stack", "Drawer", "Modal"),
+             ("Menus que deslizam a partir das lateralidades da tela chamam-se...?", "Drawer", 2, "multiple", "Tab", "Stack", "Drawer", "Modal"),
              ("Botões com efeitos visuais de opacidade ao clique usam o componente Touchable___", "opacity", 1, "cloze", "", "", "", ""),
              ("Qual biblioteca é o padrão de facto para navegação no React Native?", "react navigation", 2, "open", "", "", "", ""),
              ("Complete: Abas inferiores fixas usam a estratégia de Bottom ___ Navigation.", "tab", 2, "cloze", "", "", "", ""),
@@ -429,7 +460,7 @@ def _insert_data(cursor, p):
         (6, 5, "Conflitos e Boas Práticas",
          "Conflitos acontecem quando alterações concorrentes afetam as mesmas linhas. Devem ser resolvidos manualmente pelo dev.",
          [
-             ("O que acarreta um Conflito (Conflict) no Git?", "Alterações na mesma linha do mesmo arquivo por pessoas diferentes", 2, "multiple", "Falta de internet", "Alterações na mesma linha do mesmo arquivo por pessoas diferentes", "Mudar branch", "Commit rápido"),
+             ("Qual que acarreta um Conflito (Conflict) no Git?", "Alterações na mesma linha do mesmo arquivo por pessoas diferentes", 2, "multiple", "Falta de internet", "Alterações na mesma linha do mesmo arquivo por pessoas diferentes", "Mudar branch", "Commit rápido"),
              ("Mensagens de commit eficientes e profissionais devem ser curtas e ___", "claras", 1, "cloze", "", "", "", ""),
              ("Qual arquivo oculto configurado na raiz instrui o Git a ignorar pastas como node_modules/ ou venv/?", ".gitignore", 2, "open", "", "", "", ""),
              ("Qual comando limpa arquivos temporários não rastreados do diretório de trabalho?", "git clean", 3, "multiple", "git clean", "git reset", "git revert", "git rm"),
@@ -438,7 +469,7 @@ def _insert_data(cursor, p):
     ]
 
     # =====================
-    # 3. LAÇO DE INSERÇÃO DINÂMICA
+    # 3. LAÇO DE INSERÇÃO DINÂMICA (CORRIGIDO BUG DE DIGITAÇÃO DE 'lille' PARA 'title')
     # =====================
     for trail_id, unit_order, title, intro_text, questions_list in raw_data:
         if is_pg:
