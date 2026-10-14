@@ -31,6 +31,8 @@
     --radius-md: 12px;
     --radius-lg: 16px;
     --shadow: rgba(0, 0, 0, 0.3);
+    --red-soft: #fca5a5;
+    color-scheme: dark; /* scrollbars e controles nativos acompanham o tema */
 }
 
 /* ===========================
@@ -54,6 +56,8 @@
     --orange: #ea580c;
     --accent: #0284c7;
     --shadow: rgba(0, 0, 0, 0.08);
+    --red-soft: #b91c1c;
+    color-scheme: light;
 }
 
 body {
@@ -462,7 +466,7 @@ tr:hover td { background: var(--bg-deep); }
    LINKS DANGER
 =========================== */
 a.danger { color: var(--red); }
-a.danger:hover { color: #fca5a5; }
+a.danger:hover { color: var(--red-soft); }
 
 /* ===========================
    MENSAGEM DE ERRO
@@ -489,7 +493,9 @@ a.danger:hover { color: #fca5a5; }
         max-width: none;
     }
 
-    input {
+    input[type="text"],
+    input[type="password"],
+    input:not([type]) {
         width: 100%;
         max-width: none;
     }
@@ -602,4 +608,39 @@ a.danger:hover { color: #fca5a5; }
 @keyframes popIn {
     from { transform: scale(0.8); opacity: 0; }
     to { transform: scale(1); opacity: 1; }
+}
+
+/* ===========================
+   ACESSIBILIDADE
+   (as notificações de conquista têm o próprio CSS dentro de achievements.js)
+=========================== */
+
+/* Foco visível para quem navega pelo teclado */
+a:focus-visible,
+button:focus-visible,
+input:focus-visible,
+.theme-toggle-container:focus-within {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+}
+
+/* Esconde só visualmente (continua focável e lido por leitores de tela) */
+.sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    padding: 0;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
 }

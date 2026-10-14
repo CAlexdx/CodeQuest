@@ -3,3 +3,4 @@ flask
 werkzeug
 gunicorn
 psycopg2-binary
+tzdata>=2024.1

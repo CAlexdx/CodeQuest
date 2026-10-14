@@ -1,26 +1,42 @@
-database.db
+# Variáveis de ambiente e segredos (NUNCA suba o .env real)
+.env
+.env.*
+.env.example
 
 # Python
 __pycache__/
 *.pyc
 *.pyo
 *.pyd
+*.py[cod]
+$py.class
 
-# Banco de dados (não subir perguntas)
+# Ambientes virtuais
+venv/
+env/
+ENV/
+.venv/
+
+# Banco de dados local e temporários
 database.db
 *.sqlite
 *.sqlite3
 
-# Ambiente virtual
-venv/
-.env/
-
-# VSCode
+# IDEs e Editores (VS Code / PyCharm)
 .vscode/
+.idea/
+*.swp
+*.swo
 
-# Sistema
+# Arquivos de sistema operacional (Mac / Windows)
 .DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
 Thumbs.db
 
-# Logs
+# Logs de execução
 *.log
+logs/
