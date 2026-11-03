@@ -228,6 +228,41 @@
             text-decoration: none;
         }
 
+        /* Botão "Continuar" estilo Duolingo */
+        .continue-cta {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            margin: 0 0 22px;
+            padding: 14px 18px;
+            text-align: left;
+            border-radius: var(--radius-lg);
+            background: linear-gradient(135deg, var(--green), var(--green-hover));
+            color: #ffffff;
+            text-decoration: none;
+            box-shadow: 0 5px 0 rgba(0, 0, 0, 0.25);
+            transition: transform 0.1s, box-shadow 0.1s;
+        }
+        .continue-cta:hover { text-decoration: none; transform: translateY(-1px); color: #ffffff; }
+        .continue-cta:active { transform: translateY(3px); box-shadow: 0 2px 0 rgba(0, 0, 0, 0.25); }
+        .continue-icon { font-size: 34px; }
+        .continue-text { display: flex; flex-direction: column; flex: 1; min-width: 0; line-height: 1.3; }
+        .continue-text small { font-size: 11px; text-transform: uppercase; letter-spacing: 0.6px; opacity: 0.9; }
+        .continue-text strong { font-size: 16px; }
+        .continue-text span { font-size: 13px; opacity: 0.95; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .continue-go { font-size: 22px; }
+
+        .menu-card.card-review { border-color: rgba(234, 179, 8, 0.55); }
+        .review-pill {
+            display: inline-block;
+            min-width: 22px;
+            padding: 0 7px;
+            border-radius: 99px;
+            background: #eab308;
+            color: #422006;
+            font-weight: 800;
+        }
+
         @media (max-width: 600px) {
             .status-bar-modern {
                 grid-template-columns: repeat(2, 1fr);
@@ -275,12 +310,30 @@
         <h2 style="font-size: 24px; font-weight: 700; margin-bottom: 6px;">Bem-vindo de volta!</h2>
         <p style="color: var(--text-muted); margin: 0 0 24px 0;">Continue sua jornada nas trilhas e práticas de programação.</p>
 
+        {% if next_unit %}
+        <a href="/unidade/{{ next_unit.id }}" class="continue-cta">
+            <span class="continue-icon">{{ next_unit.icon }}</span>
+            <span class="continue-text">
+                <small>Continuar de onde parou</small>
+                <strong>{{ next_unit.trail }} · Unidade {{ next_unit.order }}</strong>
+                <span>{{ next_unit.title }}</span>
+            </span>
+            <span class="continue-go">▶</span>
+        </a>
+        {% endif %}
+
         <div class="menu-grid">
             
             <a href="/trilhas" class="menu-card">
                 <div class="card-icon">🚀</div>
                 <h3>Trilhas</h3>
                 <p>Explore módulos práticos, responda questões e acumule pontos.</p>
+            </a>
+
+            <a href="/revisao" class="menu-card card-review">
+                <div class="card-icon">🔁</div>
+                <h3>Revisão de Falhas</h3>
+                <p>{% if errors_count %}<strong class="review-pill">{{ errors_count }}</strong> questão(ões) para rever. Acertar vale XP em dobro!{% else %}Nenhum erro pendente. Quando errar, as questões aparecem aqui.{% endif %}</p>
             </a>
 
             <a href="/ranking" class="menu-card">
@@ -299,7 +352,7 @@
             <a href="/lab" id="lab-link" target="_blank" rel="noopener" class="menu-card card-lab">
                 <div class="card-icon">🧪</div>
                 <h3>CodeQuest LAB</h3>
-                <p>Pratique código ao vivo no Sandbox, Bug Hunt OBI e Studio CSS.</p>
+                <p>Pratique código ao vivo no Sandbox, Bug Hunt e Studio CSS.{% if lab_solved %} <strong>Bug Hunt: {{ lab_solved }}/{{ bughunt_total }}</strong>{% endif %}</p>
             </a>
 
             {% if is_admin %}

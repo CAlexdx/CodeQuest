@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="pt-br" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Revisão de Falhas - CodeQuest</title>
+    <link rel="stylesheet" href="/static/style.css?v={{ asset_v }}">
+    <link rel="icon" type="image/png" href="/static/logo2.png">
+
+    <script>
+        (function() {
+            try {
+                var savedTheme = localStorage.getItem('codequest_theme') || 'dark';
+                document.documentElement.setAttribute('data-theme', savedTheme);
+            } catch (e) {}
+        })();
+    </script>
+</head>
+<body>
+
+<div class="quiz unit-wrap">
+
+    <header class="unit-header">
+        <a href="/" class="unit-back" aria-label="Voltar ao início">⬅ Início</a>
+        <h1>🔁 Revisão de Falhas</h1>
+        <p class="unit-base">Acertou o que errou antes? <strong>XP em dobro (+{{ xp_reward }} XP)</strong> e a questão sai do seu banco de erros.</p>
+    </header>
+
+    {% if question %}
+
+    <div class="quiz-status">
+        <div class="review-count" title="Questões no seu banco de erros">
+            <strong id="errors-left">{{ total_errors }}</strong> no banco de erros
+        </div>
+        {% if unit_id %}
+        <a href="/unidade/{{ unit_id }}?teoria=1" class="theory-link" title="Reler a teoria: {{ unit_title }}">📖 {{ unit_title }}</a>
+        {% endif %}
+    </div>
+
+    <h2 id="enunciado" style="margin-bottom: 24px;">{{ question.question }}</h2>
+
+    <div id="area-resposta">
+
+        {% if question.type == "multiple" %}
+        <div class="area-botoes">
+            {% for opt in question.options if opt %}
+            <button type="button" class="opcao" onclick="responder(this.textContent.trim(), this)">
+                {{ opt }}
+            </button>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        {% if question.type in ["text", "open", "cloze"] %}
+        <input
+            type="text"
+            id="resposta"
+            placeholder="Digite sua resposta"
+            aria-label="Campo para resposta da questão"
+            autocomplete="off"
+            autocapitalize="off"
+            spellcheck="false">
+        <button type="button" onclick="enviar()">
+            Responder
+        </button>
+        {% endif %}
+
+        {% if question.type == "wordbank" %}
+        <div id="wordbank" class="wordbank-container">
+            {% for opt in question.options if opt %}
+            <button type="button" class="word-pill" data-index="{{ loop.index0 }}" onclick="selecionarPalavra(this)">
+                {{ opt }}
+            </button>
+            {% endfor %}
+        </div>
+
+        <div id="montagem" class="montagem-zone">
+            <span class="placeholder-text">Toque nas palavras para ordenar...</span>
+        </div>
+
+        <button type="button" onclick="enviarMontagem()" class="btn-confirmar">
+            Confirmar Resposta
+        </button>
+        {% endif %}
+
+    </div>
+
+    <div id="feedback" class="feedback" hidden aria-live="polite">
+        <p id="resultado"></p>
+        <p id="resultado-extra" class="feedback-extra"></p>
+        <button type="button" id="btn-continuar" class="btn-primary-lg">Continuar →</button>
+    </div>
+
+    {% else %}
+
+    <div class="success-box" style="padding: 12px 0;">
+        <h2>✨ Banco de erros vazio!</h2>
+        {% if total_errors == 0 %}
+        <p style="margin-bottom: 20px;">Você não tem nenhuma questão errada para revisar. Continue assim, ou avance nas trilhas para descobrir novos desafios.</p>
+        {% endif %}
+        <div class="btn-container">
+            <a href="/trilhas" class="btn-jogar">Ir para as Trilhas</a>
+            <a href="/" class="btn-ghost-link">Voltar ao início</a>
+        </div>
+    </div>
+
+    {% endif %}
+
+</div>
+
+<script>
+    const question_id = "{{ question.id if question else '' }}";
+    const quiz_mode = "review";
+</script>
+<script src="/static/script.js?v={{ asset_v }}"></script>
+
+</body>
+</html>

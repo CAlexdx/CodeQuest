@@ -4,13 +4,15 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Cadastro - CodeQuest</title>
-    <link rel="stylesheet" href="/static/style.css">
+    <link rel="stylesheet" href="/static/style.css?v={{ asset_v }}">
     <link rel="icon" type="image/png" href="/static/logo2.png">
 
     <script>
         (function() {
-            const savedTheme = localStorage.getItem('codequest_theme') || 'dark';
-            document.documentElement.setAttribute('data-theme', savedTheme);
+            // lê o tema salvo; se o navegador bloquear o armazenamento, segue com o escuro
+            var savedTheme = 'dark';
+            try { savedTheme = localStorage.getItem('codequest_theme') || 'dark'; } catch (e) {}
+            document.documentElement.setAttribute('data-theme', savedTheme === 'light' ? 'light' : 'dark');
         })();
     </script>
 

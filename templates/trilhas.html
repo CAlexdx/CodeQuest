@@ -4,14 +4,16 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Trilhas de Aprendizagem - CodeQuest</title>
-    <link rel="stylesheet" href="/static/style.css">
+    <link rel="stylesheet" href="/static/style.css?v={{ asset_v }}">
     <link rel="icon" type="image/png" href="/static/logo2.png">
 
     <!-- Script de Persistência de Tema -->
     <script>
         (function() {
-            const savedTheme = localStorage.getItem('codequest_theme') || 'dark';
-            document.documentElement.setAttribute('data-theme', savedTheme);
+            // lê o tema salvo; se o navegador bloquear o armazenamento, segue com o escuro
+            var savedTheme = 'dark';
+            try { savedTheme = localStorage.getItem('codequest_theme') || 'dark'; } catch (e) {}
+            document.documentElement.setAttribute('data-theme', savedTheme === 'light' ? 'light' : 'dark');
         })();
     </script>
 </head>
@@ -27,6 +29,7 @@
         <div class="perfil-info" style="text-align: center; margin-top: 20px;">
             <h2>{{ trail.icon }} {{ trail.name }}</h2>
             <p>{{ trail.description }}</p>
+            {% if trail.discipline %}<p style="font-size: 12px; margin-top: 4px;">📘 Base: {{ trail.discipline }} (1º bimestre)</p>{% endif %}
             
             <p style="font-size: 14px; margin-top: 10px;">
                 <strong>{{ trail.completed_units }}/{{ trail.total_units }}</strong> unidades concluídas

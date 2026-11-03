@@ -5,13 +5,15 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login - CodeQuest</title>
     <link rel="icon" type="image/png" href="/static/logo2.png">
-    <link rel="stylesheet" href="/static/style.css">
+    <link rel="stylesheet" href="/static/style.css?v={{ asset_v }}">
 
     <!-- Preservação do Tema Selecionado pelo Usuário -->
     <script>
         (function() {
-            const savedTheme = localStorage.getItem('codequest_theme') || 'dark';
-            document.documentElement.setAttribute('data-theme', savedTheme);
+            // lê o tema salvo; se o navegador bloquear o armazenamento, segue com o escuro
+            var savedTheme = 'dark';
+            try { savedTheme = localStorage.getItem('codequest_theme') || 'dark'; } catch (e) {}
+            document.documentElement.setAttribute('data-theme', savedTheme === 'light' ? 'light' : 'dark');
         })();
     </script>
 
@@ -94,7 +96,7 @@
         </p>
     </div>
 
-    <a href="https://forms.gle/McVT3E7VctU3iFdGA" target="_blank" class="feedback-float-btn" aria-label="Enviar Feedback sobre a plataforma">
+    <a href="https://forms.gle/McVT3E7VctU3iFdGA" target="_blank" rel="noopener noreferrer" class="feedback-float-btn" aria-label="Enviar Feedback sobre a plataforma">
         💬 Feedback
     </a>
 

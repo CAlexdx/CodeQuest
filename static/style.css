@@ -644,3 +644,171 @@ input:focus-visible,
         transition-duration: 0.01ms !important;
     }
 }
+
+/* ===========================
+   UNIDADE: CABEÇALHO, CORAÇÕES E PROGRESSO
+=========================== */
+.unit-wrap { max-width: 560px; }
+
+.unit-header { margin-bottom: 18px; }
+.unit-header h1 { font-size: 24px; margin: 6px 0 6px; }
+.unit-back { margin: 0; font-size: 13px; }
+.unit-base { font-size: 13px; color: var(--text-muted); }
+
+.quiz-status {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-bottom: 22px;
+    text-align: left;
+}
+.quiz-status .steps { flex: 1; font-size: 12px; color: var(--text-muted); font-weight: 600; }
+.quiz-status .progress-container { margin: 6px 0 0; }
+
+.hearts { display: inline-flex; gap: 4px; font-size: 22px; line-height: 1; }
+.heart.lost { opacity: 0.55; }
+.heart-break { animation: heartBreak 0.6s ease; }
+@keyframes heartBreak {
+    0% { transform: scale(1); }
+    30% { transform: scale(1.5) rotate(-12deg); }
+    60% { transform: scale(0.8) rotate(10deg); }
+    100% { transform: scale(1); }
+}
+
+.theory-link {
+    margin: 0;
+    font-size: 14px;
+    padding: 6px 10px;
+    border: 1px solid var(--border);
+    border-radius: 99px;
+    background: var(--bg-deep);
+    white-space: nowrap;
+    max-width: 55%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.review-count { font-size: 13px; color: var(--text-muted); flex: 1; }
+.review-count strong { color: var(--accent); font-size: 18px; }
+
+/* ===========================
+   TEORIA EM CARDS
+=========================== */
+.theory-intro { margin-bottom: 14px; font-size: 14px; }
+
+.alert-hearts {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 12px 14px;
+    margin-bottom: 16px;
+    border: 1px solid var(--red);
+    border-radius: var(--radius-md);
+    background: rgba(239, 68, 68, 0.1);
+    color: var(--text-primary);
+    font-size: 14px;
+    text-align: left;
+}
+
+.theory-dots { display: flex; justify-content: center; gap: 8px; margin-bottom: 14px; }
+.theory-dot { width: 26px; height: 6px; border-radius: 99px; background: var(--border); transition: background 0.2s; }
+.theory-dot.seen { background: var(--green); }
+.theory-dot.active { background: var(--accent); }
+
+.theory-card {
+    text-align: left;
+    background: var(--bg-deep);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 20px 18px;
+    min-height: 220px;
+    animation: popIn 0.2s ease;
+}
+.theory-card[hidden] { display: none; }
+.theory-count { font-size: 11px; text-transform: uppercase; letter-spacing: 0.6px; font-weight: 700; color: var(--accent); margin-bottom: 6px; }
+.theory-card h2 { font-size: 20px; margin-bottom: 10px; }
+.theory-text { color: var(--text-primary); font-size: 15px; line-height: 1.6; margin-bottom: 10px; }
+.theory-list { margin: 8px 0 10px 20px; color: var(--text-primary); font-size: 14px; line-height: 1.55; }
+.theory-list li { margin-bottom: 4px; }
+.theory-code {
+    margin: 10px 0;
+    padding: 12px 14px;
+    background: var(--bg-input);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    font-family: Consolas, "SFMono-Regular", Menlo, monospace;
+    font-size: 13px;
+    line-height: 1.5;
+    color: var(--text-primary);
+    overflow-x: auto;
+    white-space: pre;
+}
+.theory-tip {
+    margin-top: 10px;
+    padding: 9px 12px;
+    border-radius: var(--radius-sm);
+    background: rgba(234, 179, 8, 0.12);
+    border: 1px solid rgba(234, 179, 8, 0.45);
+    color: var(--text-primary);
+    font-size: 13px;
+}
+
+.theory-actions { display: flex; gap: 10px; margin-top: 16px; align-items: stretch; }
+.theory-actions button { margin: 0; max-width: none; width: auto; }
+.theory-actions .btn-primary-lg { flex: 1; }
+.theory-actions .btn-ghost { flex: 0 0 auto; }
+
+.btn-primary-lg {
+    padding: 14px 20px;
+    font-size: 16px;
+    font-weight: 700;
+    background: var(--green);
+    box-shadow: 0 4px 0 var(--green-hover);
+    min-height: 48px;
+}
+.btn-primary-lg:hover { background: var(--green-hover); }
+.btn-primary-lg:active { box-shadow: 0 1px 0 var(--green-hover); transform: translateY(3px); }
+
+.btn-ghost {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--text-primary);
+    min-height: 48px;
+}
+.btn-ghost:hover { background: var(--bg-deep); border-color: var(--accent); }
+
+.btn-ghost-link {
+    display: block;
+    margin: 0;
+    padding: 12px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    background: var(--bg-deep);
+    color: var(--text-primary);
+    font-weight: 600;
+    font-size: 14px;
+}
+.btn-ghost-link:hover { border-color: var(--accent); text-decoration: none; }
+.btn-ghost-link.btn-lab { border-color: #a855f7; color: #c084fc; }
+[data-theme="light"] .btn-ghost-link.btn-lab { color: #7e22ce; }
+.perfect-note { color: var(--accent); font-weight: 700; margin-bottom: 8px; }
+
+/* ===========================
+   FEEDBACK DA RESPOSTA
+=========================== */
+.feedback { margin-top: 18px; padding: 14px; border-radius: var(--radius-md); border: 1px solid var(--border); background: var(--bg-deep); }
+.feedback[hidden] { display: none; }
+.feedback #resultado { margin-top: 0; min-height: 0; }
+.feedback-extra { font-size: 14px; color: var(--text-primary); margin: 6px 0 12px; }
+.feedback-extra:empty { display: none; }
+.feedback button { margin: 0 auto; }
+
+.area-botoes button.opcao-certa { border-color: var(--green); background: rgba(34, 197, 94, 0.18); }
+.area-botoes button.opcao-errada { border-color: var(--red); background: rgba(239, 68, 68, 0.15); }
+
+@media (max-width: 600px) {
+    .unit-header h1 { font-size: 21px; }
+    .theory-card { padding: 16px 14px; }
+    .theory-actions { position: sticky; bottom: 0; padding: 10px 0 calc(6px + env(safe-area-inset-bottom)); background: var(--bg-card); }
+    .area-botoes button, .quiz button { min-height: 46px; }
+    .theory-link { max-width: 48%; }
+}

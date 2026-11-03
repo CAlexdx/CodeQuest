@@ -4,69 +4,133 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{ unit.title }} - CodeQuest</title>
-    <link rel="stylesheet" href="/static/style.css">
+    <link rel="stylesheet" href="/static/style.css?v={{ asset_v }}">
     <link rel="icon" type="image/png" href="/static/logo2.png">
-    
+
     <script>
         (function() {
-            const savedTheme = localStorage.getItem('codequest_theme') || 'dark';
-            document.documentElement.setAttribute('data-theme', savedTheme);
+            try {
+                var savedTheme = localStorage.getItem('codequest_theme') || 'dark';
+                document.documentElement.setAttribute('data-theme', savedTheme);
+            } catch (e) {}
         })();
     </script>
+    {% if view == 'finished' %}
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    {% endif %}
 </head>
 <body>
 
-<div class="quiz">
+<div class="quiz unit-wrap">
 
-    <h1>{{ unit.title }}</h1>
+    <header class="unit-header">
+        <a href="/trilhas/{{ unit.trail_id }}" class="unit-back" aria-label="Voltar para a trilha">⬅ Trilha</a>
+        <h1>{{ unit.title }}</h1>
+        {% if discipline %}
+        <p class="unit-base">📘 {{ discipline }} · 1º bimestre{% if base_note %} · {{ base_note }}{% endif %}</p>
+        {% endif %}
+    </header>
 
-    <p class="intro-text" style="margin-bottom: 20px;">
-        {{ unit.intro_text or unit.intro }}
-    </p>
+    {# ===================== 1) UNIDADE CONCLUÍDA ===================== #}
+    {% if view == 'finished' %}
 
-    {% if unit_finished %}
-
-    <div class="success-box" style="padding: 20px 0;">
+    <div class="success-box" style="padding: 12px 0;">
         <h2>🎉 Unidade Concluída!</h2>
-        <p style="margin-bottom: 20px;">Você completou todas as perguntas desta unidade com sucesso.</p>
-        <a href="/trilhas/{{ unit.trail_id }}" class="btn-jogar">
-            Voltar para Trilha
-        </a>
+        {% if perfect %}
+        <p class="perfect-note">💎 Sem nenhum erro! Isso é o que chamamos de unidade perfeita.</p>
+        {% endif %}
+        <p style="margin-bottom: 20px;">Você respondeu todas as perguntas desta unidade.</p>
+        <div class="btn-container">
+            <a href="/trilhas/{{ unit.trail_id }}" class="btn-jogar">Voltar para a Trilha</a>
+            <a href="/revisao" class="btn-ghost-link">🔁 Revisão de Falhas</a>
+            <a href="/unidade/{{ unit.id }}?teoria=1" class="btn-ghost-link">📖 Rever a teoria</a>
+            {% if lab_link %}<a href="{{ lab_link }}" target="_blank" rel="noopener" class="btn-ghost-link btn-lab">🧪 Praticar no LAB</a>{% endif %}
+        </div>
     </div>
 
     <script>
-        localStorage.setItem('last_completed_id', "{{ unit.id }}");
+        try { localStorage.setItem('last_completed_id', "{{ unit.id }}"); } catch (e) {}
 
         function lancarConfetes() {
-            confetti({
-                particleCount: 80,
-                angle: 60,
-                spread: 70,
-                origin: { x: 0, y: 0.8 }
-            });
-            confetti({
-                particleCount: 80,
-                angle: 120,
-                spread: 70,
-                origin: { x: 1, y: 0.8 }
-            });
+            if (typeof confetti !== 'function') return;
+            confetti({ particleCount: 80, angle: 60, spread: 70, origin: { x: 0, y: 0.8 } });
+            confetti({ particleCount: 80, angle: 120, spread: 70, origin: { x: 1, y: 0.8 } });
         }
-
         lancarConfetes();
         setTimeout(lancarConfetes, 500);
     </script>
 
+    {# ===================== 2) TEORIA EM CARDS ===================== #}
+    {% elif view == 'teoria' %}
+
+    {% if out_of_hearts %}
+    <div class="alert-hearts" role="alert">
+        <strong>💔 Seus corações acabaram!</strong>
+        <span>Releia o resumo com calma. Ao terminar, os corações são recarregados.</span>
+    </div>
+    {% elif must_read %}
+    <p class="theory-intro">Antes de praticar, leia o resumo. São {{ cards|length }} cards rápidos.</p>
+    {% endif %}
+
+    <section id="teoria"
+             data-unit-id="{{ unit.id }}"
+             data-must-read="{{ 1 if must_read else 0 }}"
+             data-out-of-hearts="{{ 1 if out_of_hearts else 0 }}"
+             data-after-url="{{ '/unidade/' ~ unit.id if not unit_finished else '/trilhas/' ~ unit.trail_id }}"
+             aria-label="Resumo da unidade">
+
+        <div class="theory-dots" aria-hidden="true">
+            {% for c in cards %}<span class="theory-dot{% if loop.first %} active{% endif %}"></span>{% endfor %}
+        </div>
+
+        {% for c in cards %}
+        <article class="theory-card"{% if not loop.first %} hidden{% endif %}>
+            <p class="theory-count">Card {{ loop.index }} de {{ cards|length }}</p>
+            <h2>{{ c.titulo }}</h2>
+            <p class="theory-text">{{ c.texto }}</p>
+            {% if c.topicos %}
+            <ul class="theory-list">
+                {% for t in c.topicos %}<li>{{ t }}</li>{% endfor %}
+            </ul>
+            {% endif %}
+            {% if c.codigo %}<pre class="theory-code"><code>{{ c.codigo }}</code></pre>{% endif %}
+            {% if c.dica %}<p class="theory-tip">💡 {{ c.dica }}</p>{% endif %}
+        </article>
+        {% endfor %}
+
+        <div class="theory-actions">
+            <button type="button" id="theory-back" class="btn-ghost" hidden>← Voltar</button>
+            <button type="button" id="theory-next" class="btn-primary-lg">Continuar</button>
+        </div>
+        {% if lab_link %}
+        <p style="margin-top: 14px;"><a href="{{ lab_link }}" target="_blank" rel="noopener" class="btn-ghost-link btn-lab">🧪 Praticar este assunto no LAB</a></p>
+        {% endif %}
+    </section>
+
+    {# ===================== 3) PERGUNTAS ===================== #}
     {% elif question %}
 
-    <h2 style="margin-bottom: 24px;">{{ question.question }}</h2>
+    <div class="quiz-status">
+        <div class="hearts" id="hearts" aria-label="Corações restantes: {{ hearts }} de {{ hearts_max }}">
+            {% for i in range(hearts_max) %}
+            <span class="heart{% if i >= hearts %} lost{% endif %}">{{ '❤️' if i < hearts else '🖤' }}</span>
+            {% endfor %}
+        </div>
+        <div class="steps">
+            <span id="steps-label">Pergunta {{ done_count + 1 }} de {{ total_count }}</span>
+            <div class="progress-container"><div class="progress-bar" id="steps-bar" style="width: {{ (done_count / total_count * 100)|int if total_count else 0 }}%;"></div></div>
+        </div>
+        <a href="/unidade/{{ unit.id }}?teoria=1" class="theory-link" title="Reler o resumo">📖</a>
+    </div>
+
+    <h2 id="enunciado" style="margin-bottom: 24px;">{{ question.question }}</h2>
 
     <div id="area-resposta">
 
         {% if question.type == "multiple" %}
         <div class="area-botoes">
             {% for opt in question.options if opt %}
-            <button onclick="responder(this.textContent.trim())">
+            <button type="button" class="opcao" onclick="responder(this.textContent.trim(), this)">
                 {{ opt }}
             </button>
             {% endfor %}
@@ -74,13 +138,15 @@
         {% endif %}
 
         {% if question.type in ["text", "open", "cloze"] %}
-        <input 
-            type="text" 
-            id="resposta" 
+        <input
+            type="text"
+            id="resposta"
             placeholder="Digite sua resposta"
             aria-label="Campo para resposta da questão"
-            autocomplete="off">
-        <button onclick="enviar()">
+            autocomplete="off"
+            autocapitalize="off"
+            spellcheck="false">
+        <button type="button" onclick="enviar()">
             Responder
         </button>
         {% endif %}
@@ -88,7 +154,7 @@
         {% if question.type == "wordbank" %}
         <div id="wordbank" class="wordbank-container">
             {% for opt in question.options if opt %}
-            <button class="word-pill" data-index="{{ loop.index0 }}" onclick="selecionarPalavra(this)">
+            <button type="button" class="word-pill" data-index="{{ loop.index0 }}" onclick="selecionarPalavra(this)">
                 {{ opt }}
             </button>
             {% endfor %}
@@ -98,23 +164,30 @@
             <span class="placeholder-text">Toque nas palavras para ordenar...</span>
         </div>
 
-        <button onclick="enviarMontagem()" class="btn-confirmar">
+        <button type="button" onclick="enviarMontagem()" class="btn-confirmar">
             Confirmar Resposta
         </button>
         {% endif %}
 
     </div>
 
-    <p id="resultado"></p>
+    <div id="feedback" class="feedback" hidden aria-live="polite">
+        <p id="resultado"></p>
+        <p id="resultado-extra" class="feedback-extra"></p>
+        <button type="button" id="btn-continuar" class="btn-primary-lg">Continuar →</button>
+    </div>
 
+    {% else %}
+    <p>Nenhuma pergunta disponível agora.</p>
     {% endif %}
 
 </div>
 
 <script>
     const question_id = "{{ question.id if question else '' }}";
+    const quiz_mode = "unit";
 </script>
-<script src="/static/script.js"></script>
+<script src="/static/script.js?v={{ asset_v }}"></script>
 
 </body>
 </html>

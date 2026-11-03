@@ -22,6 +22,8 @@
     "transition:transform " + ENTER_MS + "ms cubic-bezier(.22,1,.36,1),opacity .35s ease}" +
     ".cq-ach.cq-in{opacity:1;transform:translateY(0)}" +
     ".cq-ach.cq-out{opacity:0;transform:translateY(-60%);transition:transform " + LEAVE_MS + "ms ease-in,opacity .35s ease}" +
+    ".cq-ach.cq-secret{border-color:#a855f7;box-shadow:0 0 0 2px #0b0b0d,0 0 18px rgba(168,85,247,.55),0 10px 24px rgba(0,0,0,.45)}" +
+    ".cq-ach.cq-secret .cq-ach-kicker{color:#d8b4fe}" +
     ".cq-ach-icon{flex:0 0 46px;height:46px;display:flex;align-items:center;justify-content:center;font-size:26px;" +
     "background:#2d2d33;border:2px solid #7a7a86;border-radius:3px;box-shadow:inset 0 0 0 2px #1a1a1d}" +
     ".cq-ach-text{min-width:0}" +
@@ -66,10 +68,10 @@
   }
 
   function build(badge) {
-    var card = el("div", "cq-ach");
+    var card = el("div", "cq-ach" + (badge.secret ? " cq-secret" : ""));
     card.appendChild(el("div", "cq-ach-icon", badge.icon || "🏆"));
     var text = el("div", "cq-ach-text");
-    text.appendChild(el("span", "cq-ach-kicker", "Conquista desbloqueada!"));
+    text.appendChild(el("span", "cq-ach-kicker", badge.secret ? "Conquista secreta desbloqueada!" : "Conquista desbloqueada!"));
     text.appendChild(el("span", "cq-ach-name", badge.name));
     if (badge.description) text.appendChild(el("span", "cq-ach-desc", badge.description));
     card.appendChild(text);

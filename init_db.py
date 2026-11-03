@@ -14,17 +14,24 @@ SQLITE_PATH = os.path.join(BASE_DIR, "database.db")
 
 # Catálogo de conquistas. (code, nome, descrição, ícone)
 # Os mesmos códigos são usados pelo app principal e pelo CodeQuest LAB.
+# O 5º valor é "secreta": conquistas secretas só aparecem no perfil depois de conquistadas.
 BADGES = [
-    ("primeiro_login", "Primeiro Passo", "Realizou o primeiro acesso na plataforma CodeQuest.", "🚀"),
-    ("trilha_concluida", "Mestre das Trilhas", "Completou todas as unidades de uma trilha de aprendizado.", "🏆"),
-    ("ofensiva_5", "Chama Acesa", "Alcançou uma ofensiva de 5 dias seguidos.", "🔥"),
-    ("lab_explorador", "Explorador do LAB", "Visitou o CodeQuest LAB pela primeira vez.", "🧪"),
-    ("mestre_bugs", "Mestre dos Bugs", "Corrigiu desafios do Bug Hunt no CodeQuest LAB.", "🐛"),
+    ("primeiro_login", "Primeiro Passo", "Realizou o primeiro acesso na plataforma CodeQuest.", "🚀", False),
+    ("trilha_concluida", "Mestre das Trilhas", "Completou todas as unidades de uma trilha de aprendizado.", "🏆", False),
+    ("ofensiva_5", "Chama Acesa", "Alcançou uma ofensiva de 5 dias seguidos.", "🔥", False),
+    ("lab_explorador", "Explorador do LAB", "Visitou o CodeQuest LAB pela primeira vez.", "🧪", False),
+    ("mestre_bugs", "Mestre dos Bugs", "Corrigiu vários desafios do Bug Hunt no CodeQuest LAB.", "🐛", False),
+    ("revisor", "Aprendiz Persistente", "Corrigiu 5 erros na Revisão de Falhas.", "🔄", False),
+    ("notivago", "Notívago", "Estudou de madrugada, entre 00h e 05h.", "🦉", True),
+    ("madrugador", "Madrugador", "Estudou logo cedo, entre 05h e 07h.", "🌅", True),
+    ("perfeccionista", "Perfeccionista", "Terminou uma unidade sem errar nenhuma pergunta.", "💎", True),
+    ("estilista_extremo", "Estilista Extremo", "Levou todos os controles do Studio CSS ao máximo.", "🎨", True),
+    ("bug_hunter_pro", "Bug Hunter Pro", "Resolveu um desafio do Bug Hunt de primeira, sem dicas e sem erros.", "🎯", True),
 ]
 
 TABLES = [
     "users", "trails", "units", "questions", "unit_progress",
-    "answered", "badges", "user_badges", "lab_submissions",
+    "answered", "badges", "user_badges", "lab_submissions", "unit_state",
 ]
 
 
@@ -99,7 +106,8 @@ def create_tables(db):
             xp INTEGER DEFAULT 0,
             streak INTEGER DEFAULT 0,
             last_active TEXT DEFAULT NULL,
-            is_admin BOOLEAN DEFAULT FALSE
+            is_admin BOOLEAN DEFAULT FALSE,
+            last_seen TEXT DEFAULT NULL
         )""")
     db.execute(f"""
         CREATE TABLE IF NOT EXISTS trails (
@@ -135,10 +143,24 @@ def create_tables(db):
             completed BOOLEAN DEFAULT FALSE,
             PRIMARY KEY (user_id, unit_id)
         )""")
+    # correct: acertou de primeira? | fixed: já corrigiu na Revisão de Falhas? | answered_at: UTC ISO
     db.execute("""
         CREATE TABLE IF NOT EXISTS answered (
             user_id INTEGER NOT NULL,
-            question_id INTEGER NOT NULL
+            question_id INTEGER NOT NULL,
+            correct BOOLEAN DEFAULT TRUE,
+            fixed BOOLEAN DEFAULT FALSE,
+            answered_at TEXT DEFAULT NULL
+        )""")
+    # Estado do aluno em cada unidade: teoria lida + corações (vidas) da sessão de estudo.
+    db.execute("""
+        CREATE TABLE IF NOT EXISTS unit_state (
+            user_id INTEGER NOT NULL,
+            unit_id INTEGER NOT NULL,
+            theory_read BOOLEAN DEFAULT FALSE,
+            hearts INTEGER DEFAULT 3,
+            combo INTEGER DEFAULT 0,
+            PRIMARY KEY (user_id, unit_id)
         )""")
     db.execute(f"""
         CREATE TABLE IF NOT EXISTS badges (
@@ -175,7 +197,14 @@ def ensure_columns(db):
             ("streak", "INTEGER DEFAULT 0"),
             ("last_active", "TEXT DEFAULT NULL"),
             ("is_admin", "BOOLEAN DEFAULT FALSE"),
+            ("last_seen", "TEXT DEFAULT NULL"),
         ],
+        "answered": [
+            ("correct", "BOOLEAN DEFAULT TRUE"),
+            ("fixed", "BOOLEAN DEFAULT FALSE"),
+            ("answered_at", "TEXT DEFAULT NULL"),
+        ],
+        "badges": [("secret", "BOOLEAN DEFAULT FALSE")],
         "user_badges": [("earned_at", "TEXT DEFAULT CURRENT_TIMESTAMP")],
     }
     for table, cols in wanted.items():
@@ -210,6 +239,7 @@ def create_indexes(db):
     db.execute("CREATE INDEX IF NOT EXISTS idx_user_badges_user ON user_badges (user_id)").close()
     db.execute("CREATE INDEX IF NOT EXISTS idx_unit_progress_user ON unit_progress (user_id)").close()
     db.execute("CREATE INDEX IF NOT EXISTS idx_users_xp ON users (xp DESC)").close()
+    db.execute("CREATE INDEX IF NOT EXISTS idx_answered_user ON answered (user_id)").close()
     # lab_submissions pode ter sido criada à mão com outro formato: passo opcional
     db.optional(
         "CREATE INDEX IF NOT EXISTS idx_lab_sub_user_challenge ON lab_submissions (user_id, challenge_id)",
@@ -218,11 +248,16 @@ def create_indexes(db):
 
 
 def seed_badges(db):
-    for code, name, desc, icon in BADGES:
+    for code, name, desc, icon, secret in BADGES:
         db.execute(
-            "INSERT INTO badges (code, name, description, icon) VALUES (%s, %s, %s, %s) "
+            "INSERT INTO badges (code, name, description, icon, secret) VALUES (%s, %s, %s, %s, %s) "
             "ON CONFLICT (code) DO NOTHING",
-            (code, name, desc, icon),
+            (code, name, desc, icon, secret),
+        ).close()
+        # mantém textos/ícone/secreta em dia se o catálogo mudou (não mexe em quem já ganhou)
+        db.execute(
+            "UPDATE badges SET name=%s, description=%s, icon=%s, secret=%s WHERE code=%s",
+            (name, desc, icon, secret, code),
         ).close()
 
 

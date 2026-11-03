@@ -4,14 +4,16 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Perfil do Jogador - CodeQuest</title>
-    <link rel="stylesheet" href="/static/style.css">
+    <link rel="stylesheet" href="/static/style.css?v={{ asset_v }}">
     <link rel="icon" type="image/png" href="/static/logo2.png">
 
     <!-- Script Inline para evitar FOUC (Troca instantânea de tema antes da renderização) -->
     <script>
         (function() {
-            const savedTheme = localStorage.getItem('codequest_theme') || 'dark';
-            document.documentElement.setAttribute('data-theme', savedTheme);
+            // lê o tema salvo; se o navegador bloquear o armazenamento, segue com o escuro
+            var savedTheme = 'dark';
+            try { savedTheme = localStorage.getItem('codequest_theme') || 'dark'; } catch (e) {}
+            document.documentElement.setAttribute('data-theme', savedTheme === 'light' ? 'light' : 'dark');
         })();
     </script>
 
@@ -200,10 +202,19 @@
             text-decoration: none;
         }
 
+        .study-stats { grid-template-columns: repeat(3, 1fr); margin-top: 6px; }
+        .badge-locked { opacity: 0.55; filter: grayscale(0.7); }
+        .badge-secret { border-color: #a855f7; box-shadow: 0 0 14px rgba(168, 85, 247, 0.25); }
+        .secret-tag {
+            font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;
+            padding: 1px 7px; border-radius: 99px; background: #a855f7; color: #fff; vertical-align: middle;
+        }
+
         @media (max-width: 600px) {
             .profile-stats-grid {
                 grid-template-columns: 1fr;
             }
+            .study-stats { grid-template-columns: repeat(2, 1fr); }
         }
     </style>
 </head>
@@ -233,27 +244,55 @@
             </div>
         </div>
 
+        <!-- Estatísticas de estudo -->
+        <div class="badges-section" style="margin-bottom: 30px;">
+            <h3>📊 Seu desempenho</h3>
+            <div class="profile-stats-grid study-stats">
+                <div class="stat-box"><span class="label">Respostas</span><span class="value">{{ stats.answers }}</span></div>
+                <div class="stat-box"><span class="label">Acerto de primeira</span><span class="value">{{ stats.accuracy }}%</span></div>
+                <div class="stat-box"><span class="label">Unidades concluídas</span><span class="value">{{ stats.units }}</span></div>
+                <div class="stat-box"><span class="label">Erros a revisar</span><span class="value">{{ stats.errors }}</span></div>
+                <div class="stat-box"><span class="label">Erros corrigidos</span><span class="value">{{ stats.fixed }}</span></div>
+                <div class="stat-box"><span class="label">Bug Hunt (LAB)</span><span class="value">{{ stats.bughunt }}/{{ stats.bughunt_total }}</span></div>
+            </div>
+            {% if stats.errors %}
+            <p style="margin-top: 14px; font-size: 13px;"><a href="/revisao" style="margin: 0;">🔁 Rever os {{ stats.errors }} erros agora (XP em dobro)</a></p>
+            {% endif %}
+        </div>
+
         <!-- Seção de Conquistas (Badges) -->
         <div class="badges-section">
-            <h3>🏆 Conquistas Desbloqueadas</h3>
-            
+            <h3>🏆 Conquistas</h3>
+
             <div class="badges-grid">
-                {% if badges and badges|length > 0 %}
-                    {% for badge in badges %}
-                    <div class="badge-card">
-                        <div class="badge-icon-box">
-                            {{ badge.icon }}
-                        </div>
-                        <div class="badge-info">
-                            <h4>{{ badge.name }}</h4>
-                            <p>{{ badge.description }}</p>
-                        </div>
+                {% for badge in badges %}
+                <div class="badge-card{% if badge.secret %} badge-secret{% endif %}">
+                    <div class="badge-icon-box">{{ badge.icon }}</div>
+                    <div class="badge-info">
+                        <h4>{{ badge.name }}{% if badge.secret %} <span class="secret-tag">secreta</span>{% endif %}</h4>
+                        <p>{{ badge.description }}</p>
                     </div>
-                    {% endfor %}
-                {% else %}
-                    <div class="no-badges">
-                        <p>Ainda não há conquistas desbloqueadas. Continue respondendo trilhas e acessando a plataforma para ganhar medalhas!</p>
+                </div>
+                {% endfor %}
+
+                {% for badge in locked_badges %}
+                <div class="badge-card badge-locked" title="Ainda bloqueada">
+                    <div class="badge-icon-box">🔒</div>
+                    <div class="badge-info">
+                        <h4>{{ badge.name }}</h4>
+                        <p>{{ badge.description }}</p>
                     </div>
+                </div>
+                {% endfor %}
+
+                {% if hidden_secrets %}
+                <div class="badge-card badge-locked">
+                    <div class="badge-icon-box">❓</div>
+                    <div class="badge-info">
+                        <h4>{{ hidden_secrets }} conquista{{ 's' if hidden_secrets != 1 }} secreta{{ 's' if hidden_secrets != 1 }}</h4>
+                        <p>Escondida{{ 's' if hidden_secrets != 1 }} por aí. Explore a plataforma e o LAB para descobrir.</p>
+                    </div>
+                </div>
                 {% endif %}
             </div>
         </div>
@@ -267,7 +306,7 @@
 
     </div>
 
-    <a href="https://forms.gle/McVT3E7VctU3iFdGA" target="_blank" class="feedback-float-btn" aria-label="Enviar Feedback sobre a plataforma">
+    <a href="https://forms.gle/McVT3E7VctU3iFdGA" target="_blank" rel="noopener noreferrer" class="feedback-float-btn" aria-label="Enviar Feedback sobre a plataforma">
         💬 Feedback
     </a>
 
